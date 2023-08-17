@@ -1,6 +1,6 @@
 from flask import Blueprint, redirect, render_template, request, flash, url_for, session
 from .User_info import User_info
-from flask_login import LoginManager, login_user
+from flask_login import LoginManager, login_user, current_user
 
 login_manager = LoginManager()
     
@@ -18,26 +18,24 @@ def redirect_to_login():
 
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
-    email = request.form.get('email')
-    password = request.form.get('password')
-    remember = True if request.form.get('remember') == 'true' else False
-    if(email is None or password is None):
-        return render_template('login.html')
+    if request.method == "POST":
+        email = request.form.get('email')
+        password = request.form.get('password')
+        remember = True if request.form.get('remember') == 'true' else False
+        if(email is None):
+            return render_template('login.html', user_email='')
+        if(password is None):
+            return render_template('login.html', user_email=email)
+        user = User_info.check_and_load(email, password=password)
+
+        if user is None:
+            return render_template('login.html', user_email=email)
+        else:
+            login_user(user, remember=remember)
+            flash("Logged in successfully!")
+            return redirect(url_for('index'))
     
-    user = User_info.check_and_load(email, password=password)
-    if 'login_attempts_counter' not in session:
-        # TODO: reset it for a new session.
-        session['login_attempts_counter'] = 0
-        
-    if user is None:
-        error = None if session['login_attempts_counter'] < 1 else "Something is wrong with your email or password."
-        session['login_attempts_counter'] = session['login_attempts_counter'] + 1
-        return render_template('login.html', error=error)
-    else:
-        login_user(user, remember=remember)
-        flash("Logged in successfully!")
-        return redirect(url_for('index'))
-    
+    return render_template('login.html', user_email='')
 
 @auth.route('/signup')
 def signup():

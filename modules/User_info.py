@@ -1,7 +1,10 @@
-from .db_connecter import get_session
-from . import Models
 from sqlalchemy import select 
 from sqlalchemy.sql import exists
+from passlib.hash import pbkdf2_sha256
+
+from .db_connecter import get_session
+from . import Models
+
 
 class User_info:
     """
@@ -19,9 +22,9 @@ class User_info:
     @staticmethod
     def check_and_load(email: str, password: str):
         session = get_session()
-        # TODO: Make normal password verification (https://passlib.readthedocs.io/en/stable/narr/hash-tutorial.html). 
-        users = list(session.scalars(select(Models.User).where(Models.User.email == email)\
-                                                        .where(Models.User.password == password)).all())
+        users = list(session.scalars(select(Models.User).where(Models.User.email == email)).all())
+        users = [user for user in users if pbkdf2_sha256.verify(password, user.password)]
+        
         return User_info(str(users[0].id)) if len(users) == 1 else None
         
     @staticmethod
@@ -42,6 +45,9 @@ class User_info:
     def is_anonymous(self):
         return False
 
+    def get_role(self):
+        return str(self._user.role)
+    
     def get_id(self):
         try:
             return str(self._user.id)
