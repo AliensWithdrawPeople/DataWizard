@@ -18,8 +18,9 @@ class Company(Base):
     __tablename__ = 'companies'
     
     id = mapped_column(Integer, primary_key=True, nullable=False)
-    name = mapped_column(Integer)
-    logoid = mapped_column(Integer)
+    name = mapped_column(VARCHAR(100))
+    logo_id = mapped_column(Integer)
+    units: Mapped[List["Unit"]] = relationship("Unit", back_populates="company")
     
 class Unit(Base):
     __tablename__ = 'units'
@@ -28,6 +29,9 @@ class Unit(Base):
     company_id: Mapped[int] = mapped_column(Integer, ForeignKey('companies.id'))
     supervisor_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id'))
     placement: Mapped[VARCHAR] = mapped_column(VARCHAR(50))
+    
+    company: Mapped[Company] = relationship("Company", back_populates="units")
+    supervisor: Mapped["User"] = relationship("User", back_populates="units")
     hardwares: Mapped[List["Hardware"]] = relationship("Hardware", back_populates="unit")
     
 class User(Base):
@@ -44,7 +48,8 @@ class User(Base):
     certificate_number = mapped_column(VARCHAR(255))
     certificated_till = mapped_column(Date)
     
-    reports: Mapped['Report'] = relationship('Report', back_populates='inspector') 
+    units: Mapped[List['Unit']] = relationship('Unit', back_populates='supervisor') 
+    reports: Mapped[List['Report']] = relationship('Report', back_populates='inspector') 
     
     def __repr__(self) -> str:
         return f"User(id={self.id!r}, name={self.name!r}, role={self.role!r})"
@@ -67,10 +72,11 @@ class Catalogue(Base):
     __tablename__ = 'catalogue'
     
     id = mapped_column(Integer, primary_key=True)
-    name = mapped_column(Text)
+    name = mapped_column(VARCHAR(200))
+    comment = mapped_column(VARCHAR(300))
     
-    manufacturer = mapped_column(Text)
-    batch_number = mapped_column(Text)
+    manufacturer = mapped_column(VARCHAR(200))
+    batch_number = mapped_column(VARCHAR(200))
     
     # In years
     life_time = mapped_column(Integer)
@@ -101,6 +107,8 @@ class Catalogue(Base):
     
     stage4 = mapped_column(Float)
     duration4 = mapped_column(Integer)
+    
+    hardwares: Mapped[List["Hardware"]] = relationship('Hardware', back_populates='type')
 
 class Hardware(Base):
     __tablename__ = 'hardware'
@@ -108,7 +116,7 @@ class Hardware(Base):
     id = mapped_column(Integer, primary_key=True)
     company_id = mapped_column(Integer, ForeignKey('companies.id'))
     unit_id = mapped_column(Integer, ForeignKey('units.id'))
-    type = mapped_column(Integer)
+    catalogue_id = mapped_column(Integer, ForeignKey('catalogue.id'))
     tape_number = mapped_column(Text)
     
     serial_number = mapped_column(Text)
@@ -118,6 +126,7 @@ class Hardware(Base):
     last_checkup = mapped_column(Date)
     next_checkup = mapped_column(Date)
     
+    type: Mapped[Catalogue] = relationship("Catalogue", back_populates="hardwares")
     unit: Mapped[Unit] = relationship("Unit", back_populates="hardwares")
     reports: Mapped[List["Report"]] = relationship('Report', back_populates='hardware')
 
