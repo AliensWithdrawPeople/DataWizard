@@ -1,0 +1,37 @@
+{% macro render_field(field) %}
+  <dt>{{ field.label }}
+  <dd>{{ field(**kwargs)|safe }}
+  {% if field.errors %}
+    <ul class=errors>
+    {% for error in field.errors %}
+      <li>{{ error }}</li>
+    {% endfor %}
+    </ul>
+  {% endif %}
+  </dd>
+{% endmacro %}
+
+
+
+{% extends 'base.html' %}
+
+{% block content %}
+<form method=post>
+  <dl>
+    {{ render_field(form.username) }}
+    {{ render_field(form.role) }}
+    {{ render_field(form.position) }}
+    {{ render_field(form.email) }}
+    {{ render_field(form.password) }}
+    {{ render_field(form.confirm) }}
+    {{ render_field(form.phone_number) }}
+    {{ render_field(form.birthdate) }}
+    {{ render_field(form.certificate_number) }}
+    {{ render_field(form.certificated_till) }}
+    {{ render_field(form.certificate_img) }}
+    {{ render_field(form.facsimile_img) }}
+  </dl>
+  <p><input type=submit value=Register>
+</form>
+
+{% endblock %}
