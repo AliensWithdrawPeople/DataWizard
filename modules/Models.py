@@ -7,9 +7,11 @@ from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import ENUM
+from enum import Enum
 
 
 role_enum = ENUM('admin', 'inspector', 'client', name='role_enum')
+role_python_enum = Enum('role_python_enum', ['admin', 'inspector', 'client'])
 
 class Base(DeclarativeBase):
     pass

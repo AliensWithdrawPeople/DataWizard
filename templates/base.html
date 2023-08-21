@@ -44,46 +44,50 @@
                 </div>
 
                 <div id="sidebar_fullfetched" class="collapse collapse-horizontal hide border-end">
-                    <div id="sidebar-nav" class="list-group border-0 rounded-0 text-sm-start min-vh-100">
-                        <a href="#" class="list-group-item border-end-0 d-inline-block text-truncate" data-bs-parent="#sidebar"><i class="bi bi-bootstrap"></i> <span>DataWizard</span> </a>
+                    <div id="sidebar-nav" class="list-group flex-column border-0 rounded-0 pb-2 text-sm-start min-vh-100">
+                        <a href="{{ url_for(sidebar_urls['Main']) }}" class="list-group-item border-end-0 d-inline-block text-truncate" data-bs-parent="#sidebar"><i class="bi bi-bootstrap"></i> <span>DataWizard</span> </a>
 
                         <div class="dropdown-center">
-                            <button type="button" class="list-group-item list-group-item-action" data-bs-toggle="collapse" data-bs-parent="#sidebar" data-bs-target="#laboratory_collapse" aria-expanded="true">
+                            <button type="button" class="list-group-item list-group-item-action dropdown-toggle d-inline-block text-truncate" data-bs-toggle="collapse" data-bs-parent="#sidebar" data-bs-target="#laboratory_collapse" aria-expanded="true">
                                 <i class="fs-4 bi-bank"></i> <span class="ms-1 d-none d-sm-inline">Лаборатория</span> </a>
                             </button>
-                            <div class="collapse multi-collapse text-center" data-bs-parent="#sidebar" id="laboratory_collapse">
+                            <div class="collapse text-center" data-bs-parent="#sidebar" id="laboratory_collapse">
                                 <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small">
-                                    <li><a href="#" class="link-dark rounded">Инструменты</a></li>
-                                    <li><a href="#" class="link-dark rounded">Шаблоны</a></li>
-                                    <li><a href="#" class="link-dark rounded">Пользователи</a></li>
+                                    <li><a href="{{ url_for(sidebar_urls['Lab.tools']) }}" class="link-dark rounded">Инструменты</a></li>
+                                    <li><a href="{{ url_for(sidebar_urls['Lab.templates']) }}" class="link-dark rounded">Шаблоны</a></li>
+                                    {% if is_admin is sameas true %}
+                                    <li><a href="{{ url_for(sidebar_urls['Lab.users']) }}" class="link-dark rounded">Пользователи</a></li>
+                                    {% endif %}
                                 </ul>
                             </div>
                         </div>
 
-                        <a href="#" class="list-group-item border-end-0 d-inline-block text-truncate" data-bs-parent="#sidebar"><i class="bi bi-building"></i> <span>Организации</span></a>
+                        <a href="{{ url_for(sidebar_urls['Organizations']) }}" class="list-group-item border-end-0 d-inline-block text-truncate" data-bs-parent="#sidebar"><i class="bi bi-building"></i> <span>Организации</span></a>
                         
                         <div class="dropdown-center">
-                            <button type="button" class="list-group-item list-group-item-action" data-bs-toggle="collapse" data-bs-parent="#sidebar" data-bs-target="#reports_collapse" aria-expanded="true">
+                            <button type="button" class="list-group-item list-group-item-action dropdown-toggle d-inline-block text-truncate" data-bs-toggle="collapse" data-bs-parent="#sidebar" data-bs-target="#reports_collapse" aria-expanded="true">
                                 <i class="fs-4 bi-file-text-fill"></i> <span class="ms-1 d-none d-sm-inline">Отчёты</span> </a>
                             </button>
-                            <div class="collapse multi-collapse text-center" data-bs-parent="#sidebar" id="reports_collapse">
+                            <div class="collapse text-center" data-bs-parent="#sidebar" id="reports_collapse">
                                 <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small">
-                                    <li><a href="{{ url_for('search.show_cat') }}" class="link-dark rounded">Каталог</a></li>
-                                    <li><a href="#" class="link-dark rounded">Реестр</a></li>
-                                    <li><a href="#" class="link-dark rounded">Заключения</a></li>
-                                    <li><a href="#" class="link-dark rounded">Отчет (общий)</a></li>
+                                    <li><a href="{{ url_for(sidebar_urls['Reports.cat']) }}" class="link-dark rounded">Каталог</a></li>
+                                    <li><a href="{{ url_for(sidebar_urls['Reports.reestr']) }}" class="link-dark rounded">Реестр</a></li>
+                                    <li><a href="{{ url_for(sidebar_urls['Reports.reports']) }}" class="link-dark rounded">Заключения</a></li>
+                                    <li><a href="{{ url_for(sidebar_urls['Reports.report_total']) }}" class="link-dark rounded">Отчет (общий)</a></li>
                                 </ul>
                             </div>
                         </div>
-
+                        <div class="align-self-center">
+                            <hr>
+                            <!-- TODO: Log out. -->
+                            <button type="button" href="{{ url_for(sidebar_urls['LogOut']) }}" class="btn btn-outline-dark" style="width: 140px;">Выйти</button>
+                        </div>
                     </div>
                 </div>
 
             </div>
             <main class="col ps-md-2 pt-2">
-                <a href="#" data-bs-target="#sidebar_icons" data-bs-toggle="collapse" class="border rounded-3 p-1 text-decoration-none"><i class="bi bi-list bi-lg py-2 p-1"></i> Menu</a>
                 {% block content %} {% endblock %}
-                <p id="demo">dbhfh</p>
             </main>
         </div>
     </div>
@@ -98,7 +102,7 @@
         var sidebar_full = new bootstrap.Collapse(sidebar_full_element, {
             toggle: false
         });
-
+        
         sidebar_icons_only.show();
         sidebar_full.hide();
 

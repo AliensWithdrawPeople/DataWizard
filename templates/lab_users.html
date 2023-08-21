@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row flex-nowrap">
+
+        <div class="col-4">
+            <div id="role_filter_val" name="none">Выбрать по роли</div>
+            <div class="btn-group">
+                <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" id="role_filter_button">none</button>
+                <ul class="dropdown-menu">
+                    <li><button class="dropdown-item" type="button" id="show_role_none" onclick="set_role_filter_val('none')">none</button></li>
+                    <li><button class="dropdown-item" type="button" id="show_role_admin" onclick="set_role_filter_val('admin')">admin</button></li>
+                    <li><button class="dropdown-item" type="button" id="show_role_inspector" onclick="set_role_filter_val('inspector')">inspector</button></li>
+                    <li><button class="dropdown-item" type="button" id="show_role_client" onclick="set_role_filter_val('client')">client</button></li>
+                </ul>
+            </div>
+        </div>
+
+    </div>
+
+    <style>
+    tfoot input {
+        width: 100%;
+        padding: 3px;
+        box-sizing: border-box;
+    }
+    </style>
+
+    <table id="users_table" class="table table-bordered table">
+        <thead>
+        <tr>
+            <th>id</th>
+            <th>ФИО</th>
+            <th>Должность</th>
+            <th>Номер удостоверения</th> <!-- points to href with it -->
+            <th>Удостоверение годно до</th>
+            <th>e-mail</th>
+            <th>Тел.</th>
+            <th>Дата рождения</th>
+            <th>Роль</th>
+        </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    var table = $('#users_table').DataTable({
+        retrieve: true,
+        ajax: {
+                url: '/api/data/lab/users',
+                data: function ( d ) {
+                    return $.extend( {}, d, {
+                        "role_filter": document.getElementById('role_filter_button').innerText
+                    } );
+                }
+        },
+        columns: [
+            {data: 'id'},
+            {data: 'ФИО', orderable: false},
+            {data: 'Должность', orderable: false, searchable: false},
+            {data: 'Номер удостоверения', orderable: false},
+            {data: 'Удостоверение годно до'},
+            {data: 'e-mail', orderable: false},
+            {data: 'Тел.', orderable: false},
+            {data: 'Дата рождения', orderable: false},
+            {data: 'Роль', orderable: false},
+        ],
+    });
+
+    function set_role_filter_val(val) {    
+        document.getElementById("role_filter_button").innerText = val;
+        table.ajax.reload();
+    }
+</script>
+{% endblock %}
