@@ -46,6 +46,6 @@ def form_tool_dict(tool: Models.Tool)->dict:
         'Номер свидетельства' : tool.checkup_certificate_number,
         'Дата поверки' : tool.prev_checkup,
         'Дата следующей поверки' : tool.next_checkup,
-        'Статус' : 'Активен' if tool.is_active else 'Неактивен'
+        'Статус' : 'Активный' if tool.is_active else 'Неактивный'
     }
     return res

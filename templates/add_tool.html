@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% from "_formhelpers.html" import render_field %}
+<header class="fs-1 text-lg-center">
+    <b>Добавить инструмент</b>
+</header>
+<hr>
+<form method=post> 
+    <dl>
+        <div class="container-fluid">
+            <div class="row flex-nowrap">
+                <div class="col-md-3">
+                    {{ render_field(form.name) }}
+                </div>
+
+                <div class="col-md-3">
+                    {{ render_field(form.model) }}
+                </div>
+
+                <div class="col-md-3">
+                {{ render_field(form.factory_number) }}
+                </div>
+
+                <div class="col-md-3">
+                {{ render_field(form.inventory_number) }}
+                </div>
+            </div>
+
+            <div class="row flex-nowrap">
+                <div class="col-md-3">
+                    {{ render_field(form.method) }}
+                </div>
+
+                <div class="col-md-3">
+                    {{ render_field(form.prev_checkup) }}
+                </div>
+
+                <div class="col-md-3">
+                    {{ render_field(form.next_checkup) }}
+                </div>
+            </div>
+
+            <div class="row flex-nowrap">
+                <div class="col-md-3">
+                    {{ render_field(form.checkup_certificate_number) }}
+                </div>
+
+                <div class="col-md-3">
+                    {{ render_field(form.checkup_certificate_img) }}
+                </div>
+
+                <div class="col-md-3">
+                    {{ render_field(form.passport_img) }}
+                </div>
+            </div>
+
+            <div class="row flex-nowrap justify-content-lg-start">
+                <div class="col-md-3">
+                    {{ render_field(form.is_active) }}
+                </div>
+            </div>
+            
+        </div>
+    </dl>
+    <div class="row flex-nowraw">
+        <div class="col-md-auto align-self-center"> 
+            <input class="btn align-self-center bg-dark-subtle btn-outline-dark" type=submit value=Register>
+        </div>
+    </div>
+</form>
+
+{% endblock %}

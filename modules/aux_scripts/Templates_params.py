@@ -22,5 +22,6 @@ sidebar_urls = {
     'Reports.report_total' : "index",
     
     # User info section
-    'LogOut' : "index"
+    'LogIn' : "auth.login",
+    'LogOut' : "auth.logout"
 }

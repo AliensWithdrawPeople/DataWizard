@@ -2,7 +2,6 @@ from flask import Blueprint, redirect, render_template, request, flash, url_for,
 from flask_login import login_required, current_user
 from sqlalchemy import or_, select 
 from passlib.hash import pbkdf2_sha256
-from sqlalchemy import update, delete
 
 import modules.Models as Models
 import modules.db_connecter as db_connecter
@@ -11,7 +10,7 @@ from . import Models
 
 from .aux_scripts.form_dict import form_tool_dict, form_user_dict
 from .aux_scripts.Templates_params import sidebar_urls
-from .aux_scripts.forms import Add_user_form
+from .aux_scripts.forms import Add_user_form, Add_tool_form
 from .aux_scripts.check_role import check_admin, check_inspector
 
 
@@ -23,7 +22,8 @@ lab = Blueprint('lab', __name__)
 @login_required
 def show_Lab_users():
     check_admin()
-    return render_template('lab_users.html', is_admin=True, sidebar_urls=sidebar_urls)
+    username = current_user.get_name() # type: ignore
+    return render_template('lab_users.html', is_admin=True, username=username, sidebar_urls=sidebar_urls)
 
 @lab.route("/api/data/lab/users")
 @login_required
@@ -101,8 +101,8 @@ def add_user():
         session.add(user)
         session.commit()
         return redirect(url_for(sidebar_urls['Lab.users']))
-    
-    return render_template('add_user.html', is_admin=True, sidebar_urls=sidebar_urls, form=form)
+    username = current_user.get_name() # type: ignore
+    return render_template('add_user.html', is_admin=True, username=username, sidebar_urls=sidebar_urls, form=form)
 
 
 #------------------------ Tools ------------------------#
@@ -112,7 +112,8 @@ def add_user():
 def show_Lab_tools():
     check_inspector()
     is_admin = True if current_user.get_role() == 'admin' else False # type: ignore
-    return render_template('lab_tools.html', is_admin=is_admin, sidebar_urls=sidebar_urls)
+    username = current_user.get_name() # type: ignore
+    return render_template('lab_tools.html', is_admin=is_admin, username=username, sidebar_urls=sidebar_urls)
 
 @lab.route("/api/data/lab/tools")
 @login_required
@@ -138,13 +139,11 @@ def tools_json():
     # search filter
     method_filter = request.args.get('method_filter')
     if not method_filter is None and method_filter in Models.method_python_enum._member_names_:
-            print('method_filter =', method_filter, flush=True)
             selected = selected.where(Models.Tool.method == method_filter)
     
     is_active = request.args.get('is_active')
     if not is_active is None and is_active != 'Все':
             is_active = True if is_active == 'Активные' else False
-            print('is_active =', is_active, flush=True)
             selected = selected.where(Models.Tool.is_active == is_active)
             
     search = request.args.get('search[value]')
@@ -178,23 +177,25 @@ def tools_json():
 @login_required
 def add_tool():
     check_inspector()
-    form = Add_user_form(request.form)
+    form = Add_tool_form(request.form)
     if request.method == 'POST' and form.validate():
-        user = Models.User(
-            password = pbkdf2_sha256.hash(form.password.data),
-            name = form.username.data,
-            role = form.role.data, 
-            phone_number = form.phone_number.data,
-            email = form.email.data,
-            birthdate = form.birthdate.data,
-            position = form.position.data,
-            certificate_number = form.certificate_number.data,
-            certificated_till = form.certificated_till.data
+        tool = Models.Tool(
+            name  = form.name.data,
+            method = form.method.data,
+            model  = form.model.data,
+            factory_number  = form.factory_number.data,
+            inventory_number  = form.inventory_number.data,
+            checkup_certificate_number = form.checkup_certificate_number.data,
+            prev_checkup = form.prev_checkup.data,
+            next_checkup = form.next_checkup.data,
+            is_active = True if form.is_active.data == 'Активный' else False
         ) 
+                
         session = db_connecter.get_session()
-        session.add(user)
+        session.add(tool)
         session.commit()
         return redirect(url_for(sidebar_urls['Lab.tools']))
     
     is_admin = True if current_user.get_role() == 'admin' else False # type: ignore
-    return render_template('add_user.html', is_admin=is_admin, sidebar_urls=sidebar_urls, form=form)
+    username = current_user.get_name() # type: ignore
+    return render_template('add_tool.html', is_admin=is_admin, username=username, sidebar_urls=sidebar_urls, form=form)
