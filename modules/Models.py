@@ -13,6 +13,9 @@ from enum import Enum
 role_enum = ENUM('admin', 'inspector', 'client', name='role_enum')
 role_python_enum = Enum('role_python_enum', ['admin', 'inspector', 'client'])
 
+method_enum = ENUM('ВИК', 'УЗТ', 'МК', name='method_enum')
+method_python_enum = Enum('method_python_enum', ['ВИК', 'УЗТ', 'МК'])
+
 class Base(DeclarativeBase):
     pass
 
@@ -62,13 +65,14 @@ class Tool(Base):
     
     id = mapped_column(Integer, primary_key=True)
     name = mapped_column(VARCHAR(255))
-    method = mapped_column(Text)
+    method = mapped_column(method_enum)
     model = mapped_column(Text)
     factory_number = mapped_column(Text)
     inventory_number = mapped_column(Text)
     checkup_certificate_number = mapped_column(Text)
     prev_checkup = mapped_column(Date)
     next_checkup = mapped_column(Date)
+    is_active = mapped_column(Boolean)
 
 class Catalogue(Base):
     __tablename__ = 'catalogue'

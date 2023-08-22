@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row flex-nowrap justify-content-lg-start">
+        <div class="col-md-auto">
+            <a class="btn btn-primary" href="{{ url_for(sidebar_urls['Lab.add_tool'])}}">Добавить</a>
+        </div>
+
+        <div class="col-md-auto">
+            <button class=" btn btn-danger bg-danger" type="button" id="delete_elements_button" name="" onclick="delete_elements()">Удалить выбранные</button>
+        </div>
+    </div>
+
+    <div class="row flex-nowrap">
+
+        <div class="col-4">
+            <div id="method_filter_val" name="none">Метод контроля</div>
+            <div class="btn-group">
+                <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" id="method_filter_button">Все</button>
+                <ul class="dropdown-menu">
+                    <li><button class="dropdown-item" type="button" id="show_method_none" onclick="set_method_filter_val('Все')">Все</button></li>
+                    <li><button class="dropdown-item" type="button" id="show_method_VIC" onclick="set_method_filter_val('ВИК')">ВИК</button></li>
+                    <li><button class="dropdown-item" type="button" id="show_method_UZT" onclick="set_method_filter_val('УЗТ')">УЗТ</button></li>
+                    <li><button class="dropdown-item" type="button" id="show_method_MK" onclick="set_method_filter_val('МК')">МК</button></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-4">
+            <div id="is_active_filter_val" name="none">Активные</div>
+            <div class="btn-group">
+                <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" id="is_active_filter_button">Все</button>
+                <ul class="dropdown-menu">
+                    <li><button class="dropdown-item" type="button" id="is_active_none" onclick="set_is_active_val('Все')">Все</button></li>
+                    <li><button class="dropdown-item" type="button" id="is_active_true" onclick="set_is_active_val('Активные')">Активные</button></li>
+                    <li><button class="dropdown-item" type="button" id="is_active_false" onclick="set_is_active_val('Неактивные')">Неактивные</button></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <table id="tools_table" class="table table-bordered table">
+        <thead>
+        <tr>
+            <th>id</th>
+            <th>Наименование</th>
+            <th>Модель</th>
+            <th>Метод</th> <!-- points to href with it -->
+            <th>Зав. номер</th>
+            <th>Инв. номер</th>
+            <th>Номер свидетельства</th>
+            <th>Дата поверки</th>
+            <th>Дата следующей поверки</th>
+            <th>Статус</th>
+        </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const selected = [];
+    var table = $('#tools_table').DataTable({
+        retrieve: true,
+        ajax: {
+                url: '/api/data/lab/tools',
+                rowId: 'id',
+                data: function ( d ) {
+                    return $.extend( {}, d, {
+                        "method_filter": document.getElementById('method_filter_button').innerText,
+                        "is_active": document.getElementById('is_active_filter_button').innerText,
+                        "delete": get_selected()
+                    } );
+                },
+                "rowCallback": function( row, data ) {
+                    if ( $.inArray(data.DT_RowId, selected) !== -1 ) {
+                        $(row).addClass('selected');
+                }
+        }
+        },
+        columns: [
+            {data: 'id'},
+            {data: 'Наименование'},
+            {data: 'Модель'},
+            {data: 'Метод'},
+            {data: 'Заводской номер'},
+            {data: 'Инвентарный номер'},
+            {data: 'Номер свидетельства'},
+            {data: 'Дата поверки'},
+            {data: 'Дата следующей поверки'},
+            {data: 'Статус'},
+        ],
+    });
+
+    function get_selected() {
+        return selected.join(',');
+    }
+
+    table.on('click', 'tbody tr', function () {
+        let id = this.childNodes[0].innerHTML;
+        let index = $.inArray(id, selected);
+        
+        if ( index === -1 ) {
+            selected.push( id );
+        } else {
+            selected.splice( index, 1 );
+        }
+        $(this).toggleClass('selected');
+    });
+
+    function delete_elements() {
+        if(selected.length != 0) {
+            if (confirm("Вы хотите удалить " + table.rows('.selected').data().length + 'элемент(ов). Вы уверены?')) {
+                table.ajax.reload();
+                selected.length = 0;
+            } 
+        }
+    }
+
+    function set_method_filter_val(val) {    
+        document.getElementById("method_filter_button").innerText = val;
+        table.ajax.reload();
+    }
+
+    function set_is_active_val(val) {    
+        document.getElementById("is_active_filter_button").innerText = val;
+        table.ajax.reload();
+    }
+</script>
+{% endblock %}

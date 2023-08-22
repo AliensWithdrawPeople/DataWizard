@@ -33,3 +33,19 @@ def form_user_dict(user: Models.User)->dict:
         'Роль' : user.role
     }
     return res
+
+
+def form_tool_dict(tool: Models.Tool)->dict:
+    res = {
+        'id' : tool.id,
+        'Наименование' : tool.name,
+        'Модель' : tool.model,
+        'Метод' : tool.method,
+        'Заводской номер' : tool.factory_number,
+        'Инвентарный номер' : tool.inventory_number,
+        'Номер свидетельства' : tool.checkup_certificate_number,
+        'Дата поверки' : tool.prev_checkup,
+        'Дата следующей поверки' : tool.next_checkup,
+        'Статус' : 'Активен' if tool.is_active else 'Неактивен'
+    }
+    return res

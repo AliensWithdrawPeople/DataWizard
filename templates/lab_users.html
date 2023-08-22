@@ -2,10 +2,20 @@
 
 {% block content %}
 <div class="container-fluid">
-    <div class="row flex-nowrap">
+    <div class="row flex-nowrap justify-content-lg-start"> 
+        <div class="col-md-auto">
+            <a class="btn btn-primary" href="{{ url_for(sidebar_urls['Lab.add_user'])}}">Добавить</a>
+        </div>
+        <div class="col-md-auto">
+            <button class=" btn btn-danger bg-danger" type="button" id="delete_users_button" name="" onclick="delete_users()">Удалить выбранные</button>
+        </div>
 
+    </div>
+    
+    <div class="row flex-nowrap">
         <div class="col-4">
-            <div id="role_filter_val" name="none">Выбрать по роли</div>
+            <div id="role_filter_val" name="none">Роль</div>
+
             <div class="btn-group">
                 <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" id="role_filter_button">none</button>
                 <ul class="dropdown-menu">
@@ -16,24 +26,20 @@
                 </ul>
             </div>
         </div>
-
-        <div class="col-4 offset-md-2">
-            <a class="btn btn-primary" href="{{ url_for(sidebar_urls['Lab.add_user'])}}">Добавить</a>
-        </div>
     </div>
 
     <style>
-    tfoot input {
-        width: 100%;
-        padding: 3px;
-        box-sizing: border-box;
-    }
+        tr.odd.selected td{
+            background-color: rgb(107, 159, 249) !important; /* Add !important to make sure override datables base styles */
+        }
+        tr.even.selected td{
+            background-color: rgb(107, 159, 249) !important; /* Add !important to make sure override datables base styles */
+        }
     </style>
-
-    <table id="users_table" class="table table-bordered table">
+    <table id="users_table" class="table table-bordered">
         <thead>
         <tr>
-            <th>id</th>
+            <th name ='id'>id</th>
             <th>ФИО</th>
             <th>Должность</th>
             <th>Номер удостоверения</th> <!-- points to href with it -->
@@ -52,15 +58,23 @@
 
 {% block scripts %}
 <script>
+    const selected = [];
     var table = $('#users_table').DataTable({
         retrieve: true,
         ajax: {
                 url: '/api/data/lab/users',
+                rowId: 'id',
                 data: function ( d ) {
                     return $.extend( {}, d, {
-                        "role_filter": document.getElementById('role_filter_button').innerText
+                        "role_filter": document.getElementById('role_filter_button').innerText,
+                        "delete_users": get_selected()
                     } );
+                },
+                "rowCallback": function( row, data ) {
+                    if ( $.inArray(data.DT_RowId, selected) !== -1 ) {
+                        $(row).addClass('selected');
                 }
+        }
         },
         columns: [
             {data: 'id'},
@@ -74,6 +88,31 @@
             {data: 'Роль', orderable: false},
         ],
     });
+
+    function get_selected() {
+        return selected.join(',');
+    }
+
+    table.on('click', 'tbody tr', function () {
+        let id = this.childNodes[0].innerHTML;
+        let index = $.inArray(id, selected);
+        
+        if ( index === -1 ) {
+            selected.push( id );
+        } else {
+            selected.splice( index, 1 );
+        }
+        $(this).toggleClass('selected');
+    });
+
+    function delete_users() {
+        if(selected.length != 0) {
+            if (confirm("Вы хотите удалить " + table.rows('.selected').data().length + '. Вы уверены?')) {
+                table.ajax.reload();
+                selected.length = 0;
+            } 
+        }
+    }
 
     function set_role_filter_val(val) {    
         document.getElementById("role_filter_button").innerText = val;
