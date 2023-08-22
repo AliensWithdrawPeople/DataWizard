@@ -1,6 +1,8 @@
 from flask import Blueprint, redirect, render_template, request, flash, url_for, session
 from .User_info import User_info
-from flask_login import LoginManager, login_user, current_user
+from flask_login import LoginManager, login_required, login_user, current_user, logout_user
+
+from .aux_scripts.Templates_params import sidebar_urls
 
 login_manager = LoginManager()
     
@@ -42,5 +44,7 @@ def signup():
     return 'Signup'
 
 @auth.route('/logout')
+@login_required
 def logout():
-    return 'Logout'
+    logout_user()
+    return redirect(url_for(sidebar_urls['LogIn']))

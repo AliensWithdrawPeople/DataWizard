@@ -28,4 +28,5 @@ messages = [{'title': 'Message One',
 @login_required
 def index():
     is_admin = True if current_user.get_role() == 'admin' else False # type: ignore
-    return render_template('main.html', is_admin=is_admin, messages=messages, sidebar_urls=sidebar_urls)
+    username = current_user.get_name() # type: ignore
+    return render_template('main.html', is_admin=is_admin, username=username, messages=messages, sidebar_urls=sidebar_urls)
