@@ -63,16 +63,16 @@ class User(Base):
 class Tool(Base):
     __tablename__ = 'tools'
     
-    id = mapped_column(Integer, primary_key=True)
-    name = mapped_column(VARCHAR(255))
-    method = mapped_column(method_enum)
-    model = mapped_column(Text)
-    factory_number = mapped_column(Text)
-    inventory_number = mapped_column(Text)
-    checkup_certificate_number = mapped_column(Text)
-    prev_checkup = mapped_column(Date)
-    next_checkup = mapped_column(Date)
-    is_active = mapped_column(Boolean)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str]  = mapped_column(VARCHAR(255))
+    method: Mapped[ENUM] = mapped_column(method_enum)
+    model: Mapped[str]  = mapped_column(VARCHAR(255))
+    factory_number: Mapped[str]  = mapped_column(VARCHAR(255))
+    inventory_number: Mapped[str]  = mapped_column(VARCHAR(255))
+    checkup_certificate_number: Mapped[str]  = mapped_column(VARCHAR(255))
+    prev_checkup: Mapped[Date] = mapped_column(Date)
+    next_checkup: Mapped[Date] = mapped_column(Date)
+    is_active: Mapped[bool] = mapped_column(Boolean)
 
 class Catalogue(Base):
     __tablename__ = 'catalogue'

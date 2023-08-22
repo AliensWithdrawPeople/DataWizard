@@ -48,6 +48,9 @@ class User_info:
     def get_role(self):
         return str(self._user.role)
     
+    def get_name(self):
+        return str(self._user.name)
+    
     def get_id(self):
         try:
             return str(self._user.id)
