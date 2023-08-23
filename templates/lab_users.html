@@ -36,7 +36,7 @@
             background-color: rgb(107, 159, 249) !important; /* Add !important to make sure override datables base styles */
         }
     </style>
-    <table id="users_table" class="table table-bordered">
+    <table id="users_table" class="table table-bordered" style="width:100%">
         <thead>
         <tr>
             <th name ='id'>id</th>
@@ -48,6 +48,7 @@
             <th>Тел.</th>
             <th>Дата рождения</th>
             <th>Роль</th>
+            <th>Редактировать</th>
         </tr>
         </thead>
         <tbody>
@@ -86,7 +87,8 @@
             {data: 'Тел.', orderable: false},
             {data: 'Дата рождения', orderable: false},
             {data: 'Роль', orderable: false},
-        ],
+            { defaultContent: '<input type="button" class="name" value="Name"/><input type="button" class="position" value="Position"/>'},
+        ]
     });
 
     function get_selected() {
@@ -107,7 +109,7 @@
 
     function delete_users() {
         if(selected.length != 0) {
-            if (confirm("Вы хотите удалить " + table.rows('.selected').data().length + '. Вы уверены?')) {
+            if (confirm("Вы хотите удалить " + table.rows('.selected').data().length + ' элемент(ов). Вы уверены?')) {
                 table.ajax.reload();
                 selected.length = 0;
             } 

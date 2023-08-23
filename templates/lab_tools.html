@@ -22,7 +22,10 @@
                     <li><button class="dropdown-item" type="button" id="show_method_none" onclick="set_method_filter_val('Все')">Все</button></li>
                     <li><button class="dropdown-item" type="button" id="show_method_VIC" onclick="set_method_filter_val('ВИК')">ВИК</button></li>
                     <li><button class="dropdown-item" type="button" id="show_method_UZT" onclick="set_method_filter_val('УЗТ')">УЗТ</button></li>
+                    <li><button class="dropdown-item" type="button" id="show_method_MK" onclick="set_method_filter_val('МК')">УК</button></li>
                     <li><button class="dropdown-item" type="button" id="show_method_MK" onclick="set_method_filter_val('МК')">МК</button></li>
+                    <li><button class="dropdown-item" type="button" id="show_method_MK" onclick="set_method_filter_val('МК')">ПВК</button></li>
+                    <li><button class="dropdown-item" type="button" id="show_method_MK" onclick="set_method_filter_val('МК')">ГИ</button></li>
                 </ul>
             </div>
         </div>
@@ -48,7 +51,7 @@
             background-color: rgb(107, 159, 249) !important; /* Add !important to make sure override datables base styles */
         }
     </style>
-    <table id="tools_table" class="table table-bordered table">
+    <table id="tools_table" class="table table-bordered table"  style="width:100%">
         <thead>
         <tr>
             <th>id</th>
@@ -122,7 +125,7 @@
 
     function delete_elements() {
         if(selected.length != 0) {
-            if (confirm("Вы хотите удалить " + table.rows('.selected').data().length + 'элемент(ов). Вы уверены?')) {
+            if (confirm("Вы хотите удалить " + table.rows('.selected').data().length + ' элемент(ов). Вы уверены?')) {
                 table.ajax.reload();
                 selected.length = 0;
             } 

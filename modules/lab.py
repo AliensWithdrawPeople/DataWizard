@@ -126,7 +126,7 @@ def tools_json():
     total = len(session.scalars(selected).all())
     
     # delete users
-    delete_list = request.args.get('delete_users')
+    delete_list = request.args.get('delete')
     if(not delete_list is None and delete_list != ''):
         delete_list = list(map(int, delete_list.split(",")))
         if(len(delete_list) > 0):
@@ -179,6 +179,7 @@ def add_tool():
     check_inspector()
     form = Add_tool_form(request.form)
     if request.method == 'POST' and form.validate():
+        print("form.prev_checkup.dataform.prev_checkup.data =", form.prev_checkup.data, flush=True)
         tool = Models.Tool(
             name  = form.name.data,
             method = form.method.data,
@@ -188,6 +189,7 @@ def add_tool():
             checkup_certificate_number = form.checkup_certificate_number.data,
             prev_checkup = form.prev_checkup.data,
             next_checkup = form.next_checkup.data,
+            # next_checkup = form.next_checkup.data if form.next_checkup.data is None else form.next_checkup.data.strftime("%m/%d/%Y"),
             is_active = True if form.is_active.data == 'Активный' else False
         ) 
                 

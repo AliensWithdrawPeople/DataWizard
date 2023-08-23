@@ -13,8 +13,8 @@ from enum import Enum
 role_enum = ENUM('admin', 'inspector', 'client', name='role_enum')
 role_python_enum = Enum('role_python_enum', ['admin', 'inspector', 'client'])
 
-method_enum = ENUM('ВИК', 'УЗТ', 'МК', name='method_enum')
-method_python_enum = Enum('method_python_enum', ['ВИК', 'УЗТ', 'МК'])
+method_enum = ENUM('ВИК', 'УЗТ', 'УК', 'МК', 'ПВК', 'ГИ', name='method_enum')
+method_python_enum = Enum('method_python_enum', ['ВИК', 'УЗТ', 'УК', 'МК', 'ПВК', 'ГИ'])
 
 class Base(DeclarativeBase):
     pass
@@ -34,6 +34,7 @@ class Unit(Base):
     company_id: Mapped[int] = mapped_column(Integer, ForeignKey('companies.id'))
     supervisor_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id'))
     placement: Mapped[VARCHAR] = mapped_column(VARCHAR(50))
+    name: Mapped[VARCHAR] = mapped_column(VARCHAR(250))
     
     company: Mapped[Company] = relationship("Company", back_populates="units")
     supervisor: Mapped["User"] = relationship("User", back_populates="units")
@@ -70,8 +71,8 @@ class Tool(Base):
     factory_number: Mapped[str]  = mapped_column(VARCHAR(255))
     inventory_number: Mapped[str]  = mapped_column(VARCHAR(255))
     checkup_certificate_number: Mapped[str]  = mapped_column(VARCHAR(255))
-    prev_checkup: Mapped[Date] = mapped_column(Date)
-    next_checkup: Mapped[Date] = mapped_column(Date)
+    prev_checkup: Mapped[Date] = mapped_column(Date, nullable=True)
+    next_checkup: Mapped[Date] = mapped_column(Date, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean)
 
 class Catalogue(Base):
