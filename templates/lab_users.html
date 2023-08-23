@@ -6,34 +6,38 @@
         <div class="col-md-auto">
             <a class="btn btn-primary" href="{{ url_for(sidebar_urls['Lab.add_user'])}}">Добавить</a>
         </div>
+        
         <div class="col-md-auto">
             <button class=" btn btn-danger bg-danger" type="button" id="delete_users_button" name="" onclick="delete_users()">Удалить выбранные</button>
         </div>
 
-    </div>
-    
-    <div class="row flex-nowrap">
-        <div class="col-4">
-            <div id="role_filter_val" name="none">Роль</div>
+        <div class="col-md-auto">
+            <span class="align-middle fs-4">Роль</span>
+        </div>
+        
+        <div class="col-md-auto">
+            <div class="btn-group align-content-lg-around">
 
-            <div class="btn-group">
-                <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" id="role_filter_button">none</button>
-                <ul class="dropdown-menu">
-                    <li><button class="dropdown-item" type="button" id="show_role_none" onclick="set_role_filter_val('none')">none</button></li>
-                    <li><button class="dropdown-item" type="button" id="show_role_admin" onclick="set_role_filter_val('admin')">admin</button></li>
-                    <li><button class="dropdown-item" type="button" id="show_role_inspector" onclick="set_role_filter_val('inspector')">inspector</button></li>
-                    <li><button class="dropdown-item" type="button" id="show_role_client" onclick="set_role_filter_val('client')">client</button></li>
-                </ul>
+                <div class="col-md-auto">
+                    <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" id="role_filter_button">none</button>
+                    <ul class="dropdown-menu">
+                        <li><button class="dropdown-item" type="button" id="show_role_none" onclick="set_role_filter_val('none')">none</button></li>
+                        <li><button class="dropdown-item" type="button" id="show_role_admin" onclick="set_role_filter_val('admin')">admin</button></li>
+                        <li><button class="dropdown-item" type="button" id="show_role_inspector" onclick="set_role_filter_val('inspector')">inspector</button></li>
+                        <li><button class="dropdown-item" type="button" id="show_role_client" onclick="set_role_filter_val('client')">client</button></li>
+                    </ul>
+                </div>
             </div>
         </div>
+
     </div>
 
     <style>
         tr.odd.selected td{
-            background-color: rgb(107, 159, 249) !important; /* Add !important to make sure override datables base styles */
+            background-color: rgb(170, 199, 251) !important; /* Add !important to make sure override datables base styles */
         }
         tr.even.selected td{
-            background-color: rgb(107, 159, 249) !important; /* Add !important to make sure override datables base styles */
+            background-color: rgb(170, 199, 251) !important; /* Add !important to make sure override datables base styles */
         }
     </style>
     <table id="users_table" class="table table-bordered" style="width:100%">
@@ -60,6 +64,7 @@
 {% block scripts %}
 <script>
     const selected = [];
+    let delete_list = [];
     var table = $('#users_table').DataTable({
         retrieve: true,
         ajax: {
@@ -68,7 +73,7 @@
                 data: function ( d ) {
                     return $.extend( {}, d, {
                         "role_filter": document.getElementById('role_filter_button').innerText,
-                        "delete_users": get_selected()
+                        "delete_users": get_delete_list()
                     } );
                 },
                 "rowCallback": function( row, data ) {
@@ -87,12 +92,20 @@
             {data: 'Тел.', orderable: false},
             {data: 'Дата рождения', orderable: false},
             {data: 'Роль', orderable: false},
-            { defaultContent: '<input type="button" class="name" value="Name"/><input type="button" class="position" value="Position"/>'},
+            {
+                data: null,
+                render: function ( data, type, row, meta ) {
+                return  '<div class="d-grid gap-2">' +
+                            '<button type="button" class="btn btn-primary btn-sm" onclick="edit_user(' + row.id + ')">Изменить</button>' +
+                            '<button type="button" class="btn btn-primary btn-sm" onclick="delete_user(' + row.id + ')">Удалить</button>' +
+                        '</div>';
+                },
+            },
         ]
     });
 
-    function get_selected() {
-        return selected.join(',');
+    function get_delete_list() {
+        return delete_list.join(',');
     }
 
     table.on('click', 'tbody tr', function () {
@@ -110,10 +123,24 @@
     function delete_users() {
         if(selected.length != 0) {
             if (confirm("Вы хотите удалить " + table.rows('.selected').data().length + ' элемент(ов). Вы уверены?')) {
+                delete_list = [...selected];
                 table.ajax.reload();
                 selected.length = 0;
+                delete_list = [];
             } 
         }
+    }
+
+    function delete_user(id) {
+        if (confirm('Вы хотите удалить элемент с id = ' + id + '. Вы уверены?')) {
+            delete_list = [id];
+            table.ajax.reload();
+            delete_list = [];
+        } 
+    }
+
+    function edit_user(id) {
+        window.location.href = '/lab/users/edit/' + id + "?is_first=true"
     }
 
     function set_role_filter_val(val) {    

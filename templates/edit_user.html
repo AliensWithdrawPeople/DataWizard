@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% from "_formhelpers.html" import render_field %}
+<header class="fs-1 text-lg-center">
+    <b>Редактировать пользователя</b>
+</header>
+<hr>
+<form method=post> 
+    <dl>
+        <div class="container-fluid">
+            <div class="row flex-nowrap">
+                <div class="col-md-3">
+                    {{ render_field(form.username) }}
+                </div>
+
+                <div class="col-md-3">
+                    {{ render_field(form.role) }}
+                </div>
+
+                <div class="col-md-3">
+                {{ render_field(form.position) }}
+                </div>
+
+                <div class="col-md-3">
+                {{ render_field(form.email) }}
+                </div>
+            </div>
+
+            <div class="row flex-nowrap">
+                <div class="col-md-3">
+                    {{ render_field(form.phone_number) }}
+                </div>
+
+                <div class="col-md-3">
+                    {{ render_field(form.birthdate) }}
+                </div>
+            </div>
+
+            <div class="row flex-nowrap">
+                <div class="col-md-3">
+                    {{ render_field(form.certificate_number) }}
+                </div>
+
+                <div class="col-md-3">
+                    {{ render_field(form.certificated_till) }}
+                </div>
+
+                <div class="col-md-3">
+                    {{ render_field(form.certificate_img) }}
+                </div>
+                
+                <div class="col-md-3">
+                    {{ render_field(form.facsimile_img) }}
+                </div>
+            </div>
+            
+        </div>
+    </dl>
+    <div class="row flex-nowraw">
+        <div class="col-md-auto align-self-center"> 
+            <input class="btn align-self-center bg-dark-subtle btn-outline-dark" type=submit value="Редактировать">
+        </div>
+    </div>
+</form>
+
+{% endblock %}

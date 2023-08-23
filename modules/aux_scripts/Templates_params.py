@@ -11,6 +11,7 @@ sidebar_urls = {
     
     'Lab.users' : "lab.show_Lab_users",
     'Lab.add_user' : "lab.add_user",
+    'Lab.edit_user' : "lab.edit_user",
     
     # Organiztions section
     'Organizations' : "index",

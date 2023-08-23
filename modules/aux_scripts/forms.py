@@ -52,9 +52,9 @@ class Add_user_form(Form):
     ])
     confirm = PasswordField('Повторите пароль')
     phone_number = StringField('Номер телефона', [validators.Length(min=11, max=12)])
-    birthdate = DateField('Дата рождения', format='%d/%m/%Y', validators=[validators.Optional()])
+    birthdate = NullableDateField('Дата рождения', validators=[validators.Optional()])
     certificate_number = StringField('Номер удостоверения', [validators.Length(max=25)])
-    certificated_till = DateField('Срок действия удостоверения', format="%d/%m/%Y", validators=[validators.Optional()])
+    certificated_till = NullableDateField('Срок действия удостоверения', validators=[validators.Optional()])
     certificate_img = FileField('Скан удостоверенья')
     facsimile_img = FileField('Факсимиле')
     
