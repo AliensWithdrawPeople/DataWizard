@@ -69,3 +69,8 @@ class Add_tool_form(Form):
     checkup_certificate_img = FileField('Скан свидетельства') # It also must have [RequiredIf('checkup_certificate_number')]
     passport_img = FileField('Скан паспорта')
     is_active =  SelectField('Статус', choices=[('Активный', 'Активный'), ('Неактивный', 'Неактивный')])
+    
+    
+class Company_form(Form):
+    name = StringField('Наименование', [validators.Length(min=4, max=250)])
+    logo_img = FileField('Логотип')

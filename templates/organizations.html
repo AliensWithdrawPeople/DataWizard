@@ -1,0 +1,256 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    
+    <div class="row flex-nowrap justify-content-lg-start py-lg-3">
+<!-- Organizations -->
+        <div class="col-xxl-3">
+            <style>
+                tr.odd.selected td{
+                    background-color: rgb(170, 199, 251) !important;
+                }
+                tr.even.selected td{
+                    background-color: rgb(170, 199, 251) !important;
+                }
+            </style>
+
+            <table id="organizations_table" class="table table-bordered">
+                <thead>
+                <tr>
+                    <th name ='id'>id</th>
+                    <th>Наименование</th>
+                    <th>Логотип</th>
+                    <th>Редактировать</th>
+                </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="col-auto">
+            <div class="vstack gap-2 col-md-auto mx-auto"> 
+                <a class="btn btn-primary" href="{{ url_for(sidebar_urls['Organizations.Add_org'])}}">Добавить</a>
+                <button class=" btn btn-danger bg-danger" type="button" id="delete_users_button" name="" onclick="delete_selected()">Удалить выбранные</button>
+            </div>
+        </div>
+        
+        <div class="d-flex col-sm-auto justify-content-center" style="height: 800px;">
+            <div class="vr"></div>
+        </div>
+<!-- Units -->
+        <div class="col-xxl-auto">
+
+            <table id="units_table" class="table table-bordered">
+                <thead>
+                <tr>
+                    <th name ='id'>id</th>
+                    <th>Наименование компании</th>
+                    <th>Место дислокации</th>
+                    <th>Номер установки</th>
+                    <th>Участок</th>
+                    <th>Ответственный</th>
+                    <th>Редактировать</th>
+                </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="vstack gap-2 col-md-4 mx-auto"> 
+            <a class="btn btn-primary" href="{{ url_for(sidebar_urls['Organizations.Add_org'])}}">Добавить</a>
+            <button class=" btn btn-danger bg-danger" type="button" id="delete_users_button" name="" onclick="delete_selected()">Удалить выбранные</button>
+
+            <span class="align-bottom fs-5">Компания</span>
+            <div class="btn-group align-content-lg-around">
+                <div class="col-md-auto">
+                    <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" id="company_filter_button">все</button>
+                    <ul class="dropdown-menu">
+                        <li><button class="dropdown-item" type="button" id="show_company_none" onclick="set_company_filter_val('все')">все</button></li>
+                        {% for company_name in companies %}
+                            <li><button class="dropdown-item" type="button" id="show_company_{{company_name}}" onclick="set_company_filter_val('{{company_name}}')">'{{company_name}}'</button></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Organizations
+    const selected_org = [];
+    let delete_list_org = [];
+    var table_org = $('#organizations_table').DataTable({
+        retrieve: true,
+        pageLength: 5,
+        lengthMenu: [5],
+        ajax: {
+                url: '/api/data/companies',
+                rowId: 'id',
+                data: function ( d ) {
+                    return $.extend( {}, d, {
+                        "delete_list": get_delete_list_org()
+                    } );
+                },
+                rowCallback: function( row, data ) {
+                    if ( $.inArray(data.DT_RowId, selected) !== -1 ) {
+                        $(row).addClass('selected');
+                    }
+                },
+        },
+        columns: [
+            {data: 'id'},
+            {data: 'Наименование'},
+            {
+                data: 'Логотип', 
+                orderable: false, 
+                searchable: false,
+                render: function(data, type, row, meta) {
+                    src = data
+                    return  '<img src="' + src + '" alt="Organization logo" width="64" height="64" />'
+                }
+            },
+            {
+                data: null,
+                orderable: false, 
+                searchable: false,
+                render: function ( data, type, row, meta ) {
+                return  '<div class="vstack gap-1">' +
+                            '<button type="button" class="btn btn-primary btn-sm" onclick="edit_element_org(' + row.id + ')">Изменить</button>' +
+                            '<button type="button" class="btn btn-primary btn-sm" onclick="delete_element_org(' + row.id + ')">Удалить</button>' +
+                        '</div>';
+                },
+            },
+        ]
+    });
+
+    function get_delete_list_org() {
+        return delete_list_org.join(',');
+    }
+
+    table_org.on('click', 'tbody tr', function () {
+        let id = this.childNodes[0].innerHTML;
+        let index = $.inArray(id, selected);
+        
+        if ( index === -1 ) {
+            selected_org.push( id );
+        } else {
+            selected_org.splice( index, 1 );
+        }
+        $(this).toggleClass('selected');
+    });
+
+    function delete_selected_org() {
+        if(selected_org.length != 0) {
+            if (confirm("Вы хотите удалить " + table_org.rows('.selected').data().length + ' элемент(ов). Вы уверены?')) {
+                delete_list_org = [...selected_org];
+                table_org.ajax.reload();
+                selected_org.length = 0;
+                delete_list_org = [];
+            } 
+        }
+    }
+
+    function delete_element_org(id) {
+        if (confirm('Вы хотите удалить элемент с id = ' + id + '. Вы уверены?')) {
+            delete_list_org = [id];
+            table_org.ajax.reload();
+            delete_list_org = [];
+        } 
+    }
+
+    function edit_element_org(id) {
+        window.location.href = '/clients/company/edit/' + id
+    }
+
+    // Units
+    const selected_unit = [];
+    let delete_list_unit = [];
+    var table_unit = $('#units_table').DataTable({
+        retrieve: true,
+        ajax: {
+                url: '/api/data/units',
+                rowId: 'id',
+                data: function ( d ) {
+                    return $.extend( {}, d, {
+                        "filter": document.getElementById('company_filter_button').innerText,
+                        "delete_list": get_delete_list_unit()
+                    } );
+                },
+                rowCallback: function( row, data ) {
+                    if ( $.inArray(data.DT_RowId, selected_unit) !== -1 ) {
+                        $(row).addClass('selected');
+                    }
+                },
+        },
+        columns: [
+            {data: 'id'},
+            {data: 'Наименование компании'},
+            {data: 'Место дислокации'},
+            {data: 'Номер установки'},
+            {data: 'Участок'},
+            {data: 'Ответственный'},
+            {
+                data: null,
+                orderable: false, 
+                searchable: false,
+                render: function ( data, type, row, meta ) {
+                return  '<div class="vstack gap-1">' +
+                            '<button type="button" class="btn btn-primary btn-sm" onclick="edit_element_unit(' + row.id + ')">Изменить</button>' +
+                            '<button type="button" class="btn btn-primary btn-sm" onclick="delete_element_unit(' + row.id + ')">Удалить</button>' +
+                        '</div>';
+                },
+            },
+        ]
+    });
+
+    function get_delete_list_unit() {
+        return delete_list_unit.join(',');
+    }
+
+    table_unit.on('click', 'tbody tr', function () {
+        let id = this.childNodes[0].innerHTML;
+        let index = $.inArray(id, selected);
+        
+        if ( index === -1 ) {
+            selected_unit.push( id );
+        } else {
+            selected_unit.splice( index, 1 );
+        }
+        $(this).toggleClass('selected');
+    });
+
+    function delete_selected_unit() {
+        if(selected_org.length != 0) {
+            if (confirm("Вы хотите удалить " + table_org.rows('.selected').data().length + ' элемент(ов). Вы уверены?')) {
+                delete_list_unit = [...selected_unit];
+                table_unit.ajax.reload();
+                selected_unit.length = 0;
+                delete_list_unit = [];
+            } 
+        }
+    }
+
+    function delete_element_unit(id) {
+        if (confirm('Вы хотите удалить элемент с id = ' + id + '. Вы уверены?')) {
+            delete_list_unit = [id];
+            table_org.ajax.reload();
+            delete_list_unit = [];
+        } 
+    }
+
+    function edit_element_unit(id) {
+        window.location.href = '/clients/company/edit/' + id
+    }
+
+    function set_company_filter_val(val) {    
+        document.getElementById("company_filter_button").innerText = val;
+        table_unit.ajax.reload();
+    }
+</script>
+{% endblock %}
