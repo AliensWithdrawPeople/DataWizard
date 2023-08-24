@@ -196,7 +196,7 @@ def tools_json():
         }
 
 @lab.route("/lab/tools/add", methods=('GET', 'POST'))
-@lab.route("/lab/tools/edit/<id>", methods=('GET', 'POST'))
+@lab.route("/lab/tools/edit/<id>", methods=('GET', 'POST'), endpoint='edit_tool')
 @login_required
 def add_tool(id=None):
     check_inspector()
@@ -214,7 +214,7 @@ def add_tool(id=None):
         session_db = get_session()
         tool_obj = session_db.scalars(select(Models.Tool).where(Models.Tool.id == str(id))).one_or_none()
         if(tool_obj is None):
-            raise RuntimeError('edit_user: tool_obj is none')
+            raise RuntimeError('edit_tool: tool_obj is none')
         
         form.name.data = tool_obj.name
         form.method.data = tool_obj.method # type: ignore
@@ -247,7 +247,6 @@ def add_tool(id=None):
         session_db = get_session()
         if not id is None:
             tool = session_db.scalars(select(Models.Tool).where(Models.Tool.id == str(id))).one()
-            print("EDIT!!!", flush=True)
             for key, val in tool_data.items():
                 setattr(tool, key, val)
         else:        

@@ -1,20 +1,15 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="row flex-nowrap justify-content-lg-start">
-        <div class="col-md-auto">
-            <a class="btn btn-primary" href="{{ url_for(sidebar_urls['Lab.add_tool'])}}">Добавить</a>
-        </div>
+<div class="container-fluid py-lg-3">
 
-        <div class="col-md-auto">
-            <button class=" btn btn-danger bg-danger" type="button" id="delete_elements_button" name="" onclick="delete_elements()">Удалить выбранные</button>
-        </div>
+    <div class="hstack gap-3 col-md-auto align-self-lg-start ">
+        <a class="btn btn-primary" href="{{ url_for(sidebar_urls['Lab.add_tool'])}}">Добавить</a>
+        <button class=" btn btn-danger bg-danger" type="button" id="delete_elements_button" name="" onclick="delete_elements()">Удалить выбранные</button>
     </div>
 
-    <div class="row flex-nowrap">
-
-        <div class="col-4">
+    <div class="hstack gap-3 col-md-2 align-self-start">
+        <div class="vstack gap-1 col-md-auto">
             <div id="method_filter_val" name="none">Метод контроля</div>
             <div class="btn-group">
                 <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" id="method_filter_button">Все</button>
@@ -30,7 +25,7 @@
             </div>
         </div>
 
-        <div class="col-4">
+        <div class="vstack gap-1 col-md-auto">
             <div id="is_active_filter_val" name="none">Активные</div>
             <div class="btn-group">
                 <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" id="is_active_filter_button">Все</button>
@@ -160,7 +155,7 @@
     }
 
     function edit_element(id) {
-        window.location.href = '/lab/tools/edit/' + id
+        window.location.href = {{ url_for(sidebar_urls["Lab.edit_tool"], id=id)|tojson }} + id
     }
 
     function set_is_active_val(val) {    
