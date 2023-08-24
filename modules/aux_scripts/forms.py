@@ -35,7 +35,6 @@ class NullableDateField(DateField):
                 self.data = None
                 return
             try:
-                print("date_str =", date_str, flush=True)
                 self.data = datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
             except ValueError:
                 self.data = None
@@ -51,7 +50,7 @@ class Add_user_form(Form):
         validators.EqualTo('confirm', message='Пароли должны совпадать')
     ])
     confirm = PasswordField('Повторите пароль')
-    phone_number = StringField('Номер телефона', [validators.Length(min=11, max=12)])
+    phone_number = StringField('Номер телефона', [validators.Length(max=13)])
     birthdate = NullableDateField('Дата рождения', validators=[validators.Optional()])
     certificate_number = StringField('Номер удостоверения', [validators.Length(max=25)])
     certificated_till = NullableDateField('Срок действия удостоверения', validators=[validators.Optional()])

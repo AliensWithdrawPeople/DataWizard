@@ -32,7 +32,6 @@ def users_json():
     session_db = get_session()
     
     selected = select(Models.User)
-    total = len(session_db.scalars(selected).all())
     
     # delete users
     delete_users = request.args.get('delete_users')
@@ -48,42 +47,18 @@ def users_json():
         
     # search filter
     role_filter = request.args.get('role_filter')    
-    search = request.args.get('search[value]')
     if not role_filter is None and role_filter in Models.role_python_enum._member_names_:
             selected = selected.where(Models.User.role == role_filter)
-            
-    if search:
-        selected = selected.where(or_(
-                Models.User.name.like(f'%{search}%'),
-                Models.User.certificate_number.like(f'%{search}%'),
-                Models.User.certificated_till.like(f'%{search}%'),
-                Models.User.email.like(f'%{search}%'),
-                Models.User.phone_number.like(f'%{search}%'),
-                Models.User.role.like(f'%{search}%')
-            )
-        )
-    total_filtered = len(session_db.scalars(selected).all())
     
-    # TODO: sorting
-
-    # pagination
-    start = request.args.get('start', type=int)
-    length = request.args.get('length', type=int)
-         
-    users = session_db.scalars(selected.offset(start).limit(length)).all()
+    users = session_db.scalars(selected).all()
     users = [form_user_dict(user) for user in users]
         
-    return {'data': users,
-            'recordsFiltered': total_filtered,
-            'recordsTotal': total,
-            'draw': request.args.get('draw', type=int),
-        }
+    return {'data': users}
 
 @lab.route("/lab/users/add", methods=('GET', 'POST'))
 @login_required
 def add_user():
     check_admin()
-    add_or_edit = 'Добавить'
     form = Add_user_form(request.form)
     if request.method == 'POST' and form.validate():
         user = Models.User(
@@ -110,30 +85,20 @@ def add_user():
 @login_required
 def edit_user(id):
     check_admin()
-    form = Add_user_form(request.form)
+    req_form = request.form
+    form = Add_user_form(req_form)
     edit_id = str(id)
-    is_first = request.args.get('is_first', type=bool)
-        
+    fill_from_form = request.form.get('fill_from_form', type=lambda req: req.lower() == 'true')
+    
     session_db = get_session()
     user_obj = session_db.scalars(select(Models.User).where(Models.User.id == edit_id)).one_or_none()
     if(user_obj is None):
         raise RuntimeError('edit_user: user_obj is none')
         
-    user_data = {
-            'password': user_obj.password,
-            'name': user_obj.name,
-            'role': user_obj.role, 
-            'phone_number': user_obj.phone_number,
-            'email': user_obj.email,
-            'birthdate': user_obj.birthdate,
-            'position': user_obj.position,
-            'certificate_number': user_obj.certificate_number,
-            'certificated_till': user_obj.certificated_till
-        }
     del form.password
     del form.confirm
     
-    if not edit_id is None and is_first:        
+    if not edit_id is None and not fill_from_form is True:        
         form.username.data = user_obj.name
         role = user_obj.role
         if not role is None:
@@ -235,15 +200,17 @@ def tools_json():
 @login_required
 def add_tool(id=None):
     check_inspector()
+    req_form = request.form
+    form = Add_tool_form(req_form)
     
-    form = Add_tool_form(request.form)
-    is_first = request.args.get('is_first', type=bool)
+    fill_from_form = req_form.get('fill_from_form', type=lambda req: req.lower() == 'true')
+    
     is_admin = True if current_user.get_role() == 'admin' else False # type: ignore
     username = current_user.get_name() # type: ignore
     add_or_edit = 'Добавить'
     tool_data = {}
     
-    if not id is None and is_first:  
+    if not id is None and not fill_from_form is True:  
         session_db = get_session()
         tool_obj = session_db.scalars(select(Models.Tool).where(Models.Tool.id == str(id))).one_or_none()
         if(tool_obj is None):
@@ -280,8 +247,9 @@ def add_tool(id=None):
         session_db = get_session()
         if not id is None:
             tool = session_db.scalars(select(Models.Tool).where(Models.Tool.id == str(id))).one()
-            for name, val in tool_data.items():
-                tool.__dict__[name] = val
+            print("EDIT!!!", flush=True)
+            for key, val in tool_data.items():
+                setattr(tool, key, val)
         else:        
             tool = Models.Tool(**tool_data) 
             session_db.add(tool)
