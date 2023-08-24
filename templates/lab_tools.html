@@ -64,6 +64,7 @@
             <th>Дата поверки</th>
             <th>Дата следующей поверки</th>
             <th>Статус</th>
+            <th>Редактировать</th>
         </tr>
         </thead>
         <tbody>
@@ -75,6 +76,7 @@
 {% block scripts %}
 <script>
     const selected = [];
+    let delete_list = [];
     var table = $('#tools_table').DataTable({
         retrieve: true,
         ajax: {
@@ -84,7 +86,7 @@
                     return $.extend( {}, d, {
                         "method_filter": document.getElementById('method_filter_button').innerText,
                         "is_active": document.getElementById('is_active_filter_button').innerText,
-                        "delete": get_selected()
+                        "delete": get_delete_list()
                     } );
                 },
                 "rowCallback": function( row, data ) {
@@ -104,11 +106,20 @@
             {data: 'Дата поверки'},
             {data: 'Дата следующей поверки'},
             {data: 'Статус'},
+            {
+                data: null,
+                render: function ( data, type, row, meta ) {
+                return  '<div class="d-grid gap-2">' +
+                            '<button type="button" class="btn btn-primary btn-sm" onclick="edit_element(' + row.id + ')">Изменить</button>' +
+                            '<button type="button" class="btn btn-primary btn-sm" onclick="delete_element(' + row.id + ')">Удалить</button>' +
+                        '</div>';
+                },
+            },
         ],
     });
 
-    function get_selected() {
-        return selected.join(',');
+    function get_delete_list() {
+        return delete_list.join(',');
     }
 
     table.on('click', 'tbody tr', function () {
@@ -126,8 +137,10 @@
     function delete_elements() {
         if(selected.length != 0) {
             if (confirm("Вы хотите удалить " + table.rows('.selected').data().length + ' элемент(ов). Вы уверены?')) {
+                delete_list = [...selected];
                 table.ajax.reload();
                 selected.length = 0;
+                delete_list = [];
             } 
         }
     }
@@ -135,6 +148,18 @@
     function set_method_filter_val(val) {    
         document.getElementById("method_filter_button").innerText = val;
         table.ajax.reload();
+    }
+
+    function delete_element(id) {
+        if (confirm('Вы хотите удалить элемент с id = ' + id + '. Вы уверены?')) {
+            delete_list = [id];
+            table.ajax.reload();
+            delete_list = [];
+        } 
+    }
+
+    function edit_element(id) {
+        window.location.href = '/lab/tools/edit/' + id + "?is_first=true"
     }
 
     function set_is_active_val(val) {    

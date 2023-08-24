@@ -1,3 +1,4 @@
+import datetime
 from flask import Blueprint, redirect, render_template, request, flash, url_for, session
 from flask_login import login_required, current_user
 from sqlalchemy import or_, select 
@@ -254,8 +255,11 @@ def add_tool(id=None):
         form.factory_number.data = tool_obj.factory_number
         form.inventory_number.data = tool_obj.inventory_number
         form.checkup_certificate_number.data = tool_obj.checkup_certificate_number
-        form.prev_checkup.data = tool_obj.prev_checkup # type: ignore
-        form.next_checkup.data = tool_obj.next_checkup # type: ignore
+        
+        if not tool_obj.prev_checkup is None:
+            form.prev_checkup.data = datetime.datetime.strptime(str(tool_obj.prev_checkup), "%Y-%m-%d").date()
+        if not tool_obj.next_checkup is None:
+            form.next_checkup.data = datetime.datetime.strptime(str(tool_obj.next_checkup), "%Y-%m-%d").date()
         form.is_active.data = 'Активный' if tool_obj.is_active else 'Неактивный'
         
         add_or_edit = 'Редактировать'
