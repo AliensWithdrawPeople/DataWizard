@@ -6,6 +6,7 @@ sidebar_urls = {
     # Lab section
     'Lab.tools' : "lab.show_Lab_tools",
     'Lab.add_tool' : "lab.add_tool",
+    'Lab.edit_tool' : "lab.edit_tool",
     
     'Lab.templates' : "index",
     
@@ -14,7 +15,8 @@ sidebar_urls = {
     'Lab.edit_user' : "lab.edit_user",
     
     # Organiztions section
-    'Organizations' : "index",
+    'Organizations' : "organizations.orgs",
+    'Organizations.Add_org' : "organizations.add_company",
     
     # Reports section
     'Reports.cat' : "search.show_Reports_cat",
