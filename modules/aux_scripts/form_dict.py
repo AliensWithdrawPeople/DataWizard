@@ -118,7 +118,7 @@ def form_unit_dict(unit: Models.Unit)->dict:
         'id' : unit.id,
         'Наименование компании' : unit.company.name,
         'Место дислокации' : unit.location,
-        'Номер установки' : unit.name,
+        'Номер установки' : unit.setup_name,
         'Участок' : unit.sector,
         'Ответственный' : unit.supervisor.name
     }

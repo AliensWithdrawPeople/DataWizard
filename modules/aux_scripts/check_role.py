@@ -10,5 +10,5 @@ def check_admin():
     
 def check_inspector():
     role =  current_user.get_role() # type: ignore
-    if role != 'admin':
+    if role != 'admin' and role != 'inspector':
         return redirect(url_for(sidebar_urls['Main']))

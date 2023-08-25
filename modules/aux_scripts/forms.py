@@ -1,5 +1,6 @@
 from wtforms import Form, DateField, StringField, PasswordField, validators, SelectField, EmailField, FileField
 import datetime
+from wtforms.widgets import Select, html_params
 
 class RequiredIf(validators.DataRequired):
     """Validator which makes a field required if another field is set and has a truthy value.
@@ -74,3 +75,10 @@ class Add_tool_form(Form):
 class Company_form(Form):
     name = StringField('Наименование', [validators.Length(min=4, max=250)])
     logo_img = FileField('Логотип')
+
+class Unit_form(Form):
+    company_name = SelectField('Наименование компании') # type:ignore
+    location = StringField('Место дислокации', validators=[validators.Optional()])
+    setup_name = StringField('Номер установки')
+    sector = StringField('Участок')
+    supervisor_name = SelectField('Ответственный') # type:ignore

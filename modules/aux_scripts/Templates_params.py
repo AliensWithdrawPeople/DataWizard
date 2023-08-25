@@ -16,7 +16,10 @@ sidebar_urls = {
     
     # Organiztions section
     'Organizations' : "organizations.orgs",
-    'Organizations.Add_org' : "organizations.add_company",
+    'Organizations.add_org' : "organizations.add_company",
+    'Organizations.edit_org' : "organizations.edit_company",
+    'Organizations.add_unit' : "organizations.add_unit",
+    'Organizations.edit_unit' : "organizations.edit_unit",
     
     # Reports section
     'Reports.cat' : "search.show_Reports_cat",
