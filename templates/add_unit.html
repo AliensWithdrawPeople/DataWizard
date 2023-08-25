@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% from "_formhelpers.html" import render_field %}
+<header class="fs-1 text-lg-center py-lg-3">
+    <b>{{add_or_edit}} юнит</b>
+</header>
+<hr>
+<form method=post> 
+    <dl>
+        <div class="row align-self-start gap-4 mx-3">
+            <div class="col-md-auto">
+                {{ render_field(form.company_name) }}
+            </div>
+            <div class="col-md-auto">
+                {{ render_field(form.location) }}
+            </div>
+            <div class="col-md-auto">
+                {{ render_field(form.setup_name) }}
+            </div>
+        </div>
+
+        <div class="row align-self-start gap-5 mx-3 my-lg-5">
+            <div class="col-md-auto">
+                {{ render_field(form.sector) }}
+            </div>
+            <div class="col-md-auto">
+                {{ render_field(form.supervisor_name) }}
+            </div>
+        </div>
+    </dl>
+    <div class="row flex-nowraw gap-3 mx-3">
+        <input type="hidden" id="fill_from_form" name="fill_from_form" value="true" />
+        <div class="col-md-auto align-self-center"> 
+            <input class="btn align-self-center bg-dark-subtle btn-outline-dark" type="submit" value="{{add_or_edit}}">
+        </div>
+    </div>
+</form>
+
+{% endblock %}

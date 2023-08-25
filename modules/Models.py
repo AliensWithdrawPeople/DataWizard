@@ -19,12 +19,17 @@ method_python_enum = Enum('method_python_enum', ['ВИК', 'УЗТ', 'УК', 'М
 class Base(DeclarativeBase):
     pass
 
+class Img(Base):
+    __tablename__ = 'images'
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, nullable=False)
+    src: Mapped[VARCHAR] = mapped_column(VARCHAR(100))
+    
 class Company(Base):
     __tablename__ = 'companies'
     
     id = mapped_column(Integer, primary_key=True, nullable=False)
     name = mapped_column(VARCHAR(100))
-    logo_id = mapped_column(Integer)
+    logo_id = mapped_column(Integer, ForeignKey('images.id'))
     units: Mapped[List["Unit"]] = relationship("Unit", back_populates="company")
     
 class Unit(Base):
@@ -33,8 +38,9 @@ class Unit(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     company_id: Mapped[int] = mapped_column(Integer, ForeignKey('companies.id'))
     supervisor_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id'))
-    placement: Mapped[VARCHAR] = mapped_column(VARCHAR(50))
-    name: Mapped[VARCHAR] = mapped_column(VARCHAR(250))
+    location: Mapped[VARCHAR] = mapped_column(VARCHAR(50))
+    sector: Mapped[VARCHAR] = mapped_column(VARCHAR(50)) # Участок
+    setup_name: Mapped[VARCHAR] = mapped_column(VARCHAR(50)) # Номер установки
     
     company: Mapped[Company] = relationship("Company", back_populates="units")
     supervisor: Mapped["User"] = relationship("User", back_populates="units")

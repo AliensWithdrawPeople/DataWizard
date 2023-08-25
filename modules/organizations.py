@@ -9,7 +9,7 @@ from . import Models
 
 from .aux_scripts.form_dict import form_organization_dict, form_unit_dict, form_json
 from .aux_scripts.Templates_params import sidebar_urls
-from .aux_scripts.forms import Company_form
+from .aux_scripts.forms import Company_form, Unit_form
 from .aux_scripts.check_role import check_admin, check_inspector
 
 
@@ -38,11 +38,12 @@ def units_json():
 
 
 @organizations.route("/clients/company/add", methods=('GET', 'POST'))
-@organizations.route("/clients/company/edit/<id>", methods=('GET', 'POST'))
+@organizations.route("/clients/company/edit/<id>", methods=('GET', 'POST'), endpoint='edit_company')
 @login_required
 def add_company(id=None):
     check_inspector()
     req_form = request.form
+    
     form = Company_form(req_form)
     
     fill_from_form = req_form.get('fill_from_form', type=lambda req: req.lower() == 'true')
@@ -86,3 +87,69 @@ def send_logo(id):
     check_inspector()
     res = send_from_directory("C:/work/DataWizard/static/img/", "tiny_logo.png")
     return res
+
+@organizations.route("/clients/unit/add", methods=('GET', 'POST'))
+@organizations.route("/clients/unit/edit/<id>", methods=('GET', 'POST'), endpoint='edit_unit')
+@login_required
+def add_unit(id=None):
+    check_inspector()
+    if(not id is None and not id.isdigit()):
+            # Log that some faggot tried to mess with me by passing me shitty id!
+            return redirect(url_for(sidebar_urls['Organizations']))
+        
+    req_form = request.form
+    form = Unit_form(req_form)
+    fill_from_form = req_form.get('fill_from_form', type=lambda req: req.lower() == 'true')
+    
+    is_admin = True if current_user.get_role() == 'admin' else False # type: ignore
+    username = current_user.get_name() # type: ignore
+    add_or_edit = 'Добавить'
+    data = {}
+    
+    session_db = get_session()
+    companies = list(session_db.execute(select(Models.Company.id, Models.Company.name)).all())
+    supervisors = list(session_db.execute(select(Models.User.id, Models.User.name).where(
+        or_(
+            Models.User.role == 'client',
+            Models.User.role == 'admin'
+        )
+    )).all())
+
+    form.company_name.choices = [(key, val) for (key, val) in companies]
+    form.supervisor_name.choices = [(key, val) for (key, val) in supervisors]
+    
+    companies_dict = {name : id for (id, name) in companies}
+    supervisors_dict = {name : id for (id, name) in supervisors}
+            
+    if not id is None and not fill_from_form is True:  
+        obj = session_db.scalars(select(Models.Unit).where(Models.Unit.id == str(id))).one_or_none()
+        if(obj is None):
+            raise RuntimeError('edit_unit: obj is none')
+        form.company_name.data = obj.company.name
+        form.location.data = obj.location
+        form.setup_name.data = obj.setup_name
+        form.sector.data = obj.sector
+        form.supervisor_name.data = obj.supervisor.name
+        add_or_edit = 'Редактировать'
+        return render_template('add_unit.html', is_admin=is_admin, username=username, sidebar_urls=sidebar_urls, add_or_edit=add_or_edit, form=form)
+        
+    if request.method == 'POST' and form.validate():
+        data = {
+            'company_id'  : form.company_name.data,
+            'supervisor_id'  : form.supervisor_name.data,
+            'location' : form.location.data,
+            'sector' : form.sector.data,
+            'setup_name' : form.setup_name.data,
+        }
+        if not id is None:
+            obj = session_db.scalars(select(Models.Unit).where(Models.Unit.id == str(id))).one()
+            for key, val in data.items():
+                setattr(obj, key, val)
+        else:        
+            obj = Models.Unit(**data) 
+            session_db.add(obj)
+            
+        session_db.commit()
+        return redirect(url_for(sidebar_urls['Organizations']))
+    
+    return render_template('add_unit.html', is_admin=is_admin, username=username, sidebar_urls=sidebar_urls, add_or_edit=add_or_edit, form=form)    
