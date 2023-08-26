@@ -98,7 +98,7 @@
                     } );
                 },
                 rowCallback: function( row, data ) {
-                    if ( $.inArray(data.DT_RowId, selected) !== -1 ) {
+                    if ( $.inArray(data.DT_RowId, selected_org) !== -1 ) {
                         $(row).addClass('selected');
                     }
                 },
@@ -135,7 +135,7 @@
 
     table_org.on('click', 'tbody tr', function () {
         let id = this.childNodes[0].innerHTML;
-        let index = $.inArray(id, selected);
+        let index = $.inArray(id, selected_org);
         
         if ( index === -1 ) {
             selected_org.push( id );
@@ -215,7 +215,7 @@
 
     table_unit.on('click', 'tbody tr', function () {
         let id = this.childNodes[0].innerHTML;
-        let index = $.inArray(id, selected);
+        let index = $.inArray(id, selected_unit);
         
         if ( index === -1 ) {
             selected_unit.push( id );

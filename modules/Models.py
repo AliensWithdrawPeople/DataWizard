@@ -89,6 +89,7 @@ class Catalogue(Base):
     comment = mapped_column(VARCHAR(300))
     
     manufacturer = mapped_column(VARCHAR(200))
+    manufacturer_logo_id = mapped_column(Integer, ForeignKey('images.id'))
     batch_number = mapped_column(VARCHAR(200))
     
     # In years
@@ -96,6 +97,12 @@ class Catalogue(Base):
     
     temp_min = mapped_column(Integer)
     temp_max = mapped_column(Integer)
+    
+    sketch_VIC_id = mapped_column(Integer, ForeignKey('images.id'))
+    sketch_UZT_id = mapped_column(Integer, ForeignKey('images.id'))
+    sketch_UK_id = mapped_column(Integer, ForeignKey('images.id'))
+    sketch_MK_id = mapped_column(Integer, ForeignKey('images.id'))
+    sketch_diagram_id = mapped_column(Integer, ForeignKey('images.id'))
     
     T1 = mapped_column(Float)
     T2 = mapped_column(Float)
@@ -105,7 +112,7 @@ class Catalogue(Base):
     T6 = mapped_column(Float)
     T7 = mapped_column(Float)
     
-    pressure_max = mapped_column(Float)
+    max_pressure = mapped_column(Float)
     
     # Max pressure on the first stage, MPa 
     stage1 = mapped_column(Float)

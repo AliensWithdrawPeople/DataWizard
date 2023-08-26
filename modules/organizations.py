@@ -20,11 +20,12 @@ organizations = Blueprint('organizations', __name__)
 def orgs():
     check_inspector()
     username = current_user.get_name() # type: ignore
+    is_admin = current_user.get_role() == 'admin' # type: ignore
     
     session_db = get_session()
     selected = select(Models.Company.name).join_from(Models.Unit, Models.Company).distinct()
     companies = list(session_db.scalars(selected).all())
-    return render_template('organizations.html', is_admin=True, username=username, sidebar_urls=sidebar_urls, companies=companies)
+    return render_template('organizations.html', is_admin=is_admin, username=username, sidebar_urls=sidebar_urls, companies=companies)
 
 @organizations.route("/api/data/companies")
 @login_required
@@ -48,7 +49,7 @@ def add_company(id=None):
     
     fill_from_form = req_form.get('fill_from_form', type=lambda req: req.lower() == 'true')
     
-    is_admin = True if current_user.get_role() == 'admin' else False # type: ignore
+    is_admin = current_user.get_role() == 'admin' # type: ignore
     username = current_user.get_name() # type: ignore
     add_or_edit = 'Добавить'
     data = {}
@@ -101,7 +102,7 @@ def add_unit(id=None):
     form = Unit_form(req_form)
     fill_from_form = req_form.get('fill_from_form', type=lambda req: req.lower() == 'true')
     
-    is_admin = True if current_user.get_role() == 'admin' else False # type: ignore
+    is_admin = current_user.get_role() == 'admin' # type: ignore
     username = current_user.get_name() # type: ignore
     add_or_edit = 'Добавить'
     data = {}
@@ -117,9 +118,6 @@ def add_unit(id=None):
 
     form.company_name.choices = [(key, val) for (key, val) in companies]
     form.supervisor_name.choices = [(key, val) for (key, val) in supervisors]
-    
-    companies_dict = {name : id for (id, name) in companies}
-    supervisors_dict = {name : id for (id, name) in supervisors}
             
     if not id is None and not fill_from_form is True:  
         obj = session_db.scalars(select(Models.Unit).where(Models.Unit.id == str(id))).one_or_none()
