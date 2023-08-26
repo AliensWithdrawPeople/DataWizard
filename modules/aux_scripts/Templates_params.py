@@ -22,7 +22,10 @@ sidebar_urls = {
     'Organizations.edit_unit' : "organizations.edit_unit",
     
     # Reports section
-    'Reports.cat' : "search.show_Reports_cat",
+    'Reports.cat' : "reports.catalogue.cat",
+    'Reports.add_cat' : "reports.catalogue.add_cat",
+    'Reports.edit_cat' : "reports.catalogue.edit_cat",
+    
     'Reports.reestr' : "index",
     'Reports.reports' : "index",
     'Reports.report_total' : "index",

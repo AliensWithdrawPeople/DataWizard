@@ -1,13 +1,13 @@
 from .. import Models
 from datetime import timedelta
 from flask import request, url_for
-from sqlalchemy import select 
+from sqlalchemy import select, or_
 
 from pathlib import PurePath
 
 
 def form_json(session_db, model, form_dict_func, check_role_func, filter_dict: dict={}):
-    """_summary_
+    """JSON for a client side table
 
     Parameters
     ----------
@@ -23,8 +23,7 @@ def form_json(session_db, model, form_dict_func, check_role_func, filter_dict: d
 
     Returns
     -------
-    _type_
-        _description_
+    dict
     """
     check_role_func()
     selected = select(model)
@@ -32,8 +31,8 @@ def form_json(session_db, model, form_dict_func, check_role_func, filter_dict: d
     # delete users
     delete_list = request.args.get('delete_list')
     if(not delete_list is None and delete_list != ''):
-        print("Exterminate!!!", delete_list, flush=True)
         delete_list = list(map(int, delete_list.split(",")))
+        print('delete_list =', delete_list, flush=True)
         if(len(delete_list) > 0):
             objs = list(session_db.scalars(selected.where(model.id.in_(delete_list))).all())
             for obj in objs:
@@ -51,7 +50,68 @@ def form_json(session_db, model, form_dict_func, check_role_func, filter_dict: d
         
     return {'data': objs}
 
+def form_server_side_json(session_db, model, form_dict_func, check_role_func, where_clause, filter_dict: dict={}):
+    """JSON for a server side table
+
+    Parameters
+    ----------
+    session_db : Session
+        sqlalchemy session for the database
+    model :
+        sqlalchemy ORM model with id field
+    form_dict_func : Callable
+    check_role_func : Callable
+    where_clause: SQLalchemy where clause is used in search
+    filter_dict : dict, optional
+        {filter_name, filter_func}, by default {}
+        filter_func(selected, model, filter_val)->selected
+
+    Returns
+    -------
+    dict
+    """
+    check_role_func()
+        
+    selected = select(model)
+    total = len(session_db.scalars(selected).all())
     
+    # delete users
+    delete_list = request.args.get('delete')
+    if(not delete_list is None and delete_list != ''):
+        delete_list = list(map(int, delete_list.split(",")))
+        if(len(delete_list) > 0):
+            objs = list(session_db.scalars(selected.where(model.id.in_(delete_list))).all())
+            for obj in objs:
+                session_db.delete(obj)
+            session_db.commit()
+            selected = select(Models.Tool)
+            
+    # search filter
+    for name, filter in filter_dict.items():
+        filter_val = request.args.get(name)
+        selected = filter(selected, model, filter_val)
+    
+    # search
+    search = request.args.get('search[value]')
+    if search:
+        selected = selected.where(where_clause)
+    total_filtered = len(session_db.scalars(selected).all())
+    
+    # TODO: sorting
+
+    # pagination
+    start = request.args.get('start', type=int)
+    length = request.args.get('length', type=int)
+         
+    objs = session_db.scalars(selected.offset(start).limit(length)).all()
+    tools = [form_dict_func(obj) for obj in objs]
+        
+    return {'data': tools,
+            'recordsFiltered': total_filtered,
+            'recordsTotal': total,
+            'draw': request.args.get('draw', type=int),
+        }
+     
 def form_hardware_dict(hardware: Models.Hardware, is_inspector: bool)->dict:
     res = {
         'Компания' : hardware.unit.company.name,
@@ -121,5 +181,16 @@ def form_unit_dict(unit: Models.Unit)->dict:
         'Номер установки' : unit.setup_name,
         'Участок' : unit.sector,
         'Ответственный' : unit.supervisor.name
+    }
+    return res
+
+def form_cat_dict(elem: Models.Catalogue)->dict:
+    res = {
+        'id' : elem.id,
+        'Наименование' : elem.name,
+        'Характеристики' : elem.comment,
+        'Производитель' : elem.manufacturer,
+        'Партийный номер' : elem.batch_number,
+        'Максимальное рабочее давление' : elem.max_pressure
     }
     return res

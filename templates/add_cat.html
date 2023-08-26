@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% from "_formhelpers.html" import render_field %}
+<header class="fs-1 text-lg-center py-lg-3">
+    <b>{{add_or_edit}} элемент (каталог)</b>
+</header>
+<hr>
+<form method=post> 
+    <dl>
+        <div class="row align-self-start gap-4 mx-3">
+            <div class="col-md-auto">
+                {{ render_field(form.name) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.comment) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.manufacturer) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.manufacturer_logo_img) }}
+            </div>
+        </div>
+
+        <div class="row align-self-start gap-5 mx-3 my-lg-5">
+            <div class="col-md-auto">
+                {{ render_field(form.batch_number) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.temp_min) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.temp_max) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.life_time) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.sketch_VIC_img) }}
+            </div>
+        </div>
+        <hr>
+
+        <div class="row align-self-start gap-5 mx-3 my-lg-5">
+            <div class="hstack col-sm-1 gap-3 align-content-start">
+                {{ render_field(form.T1) }}
+                {{ render_field(form.T2) }}
+                {{ render_field(form.T3) }}
+                {{ render_field(form.T4) }}
+                {{ render_field(form.T5) }}
+                {{ render_field(form.T6) }}
+                {{ render_field(form.T7) }}
+            </div>
+            {{ render_field(form.sketch_UZT_img) }}
+        </div>
+        <hr>
+
+        <div class="row align-self-start gap-5 mx-3 my-lg-5">
+            <div class="hstack col-sm-1 gap-3 align-content-start">
+                {{ render_field(form.sketch_UK_img) }}
+                {{ render_field(form.sketch_MK_img) }}
+            </div>
+        </div>
+        <hr>
+        <div class="row align-self-start gap-5 mx-3 my-lg-5">
+            <div class="hstack col-nd-auto align-content-start">
+                <div class="vstack col-md-auto gap-2">
+                    {{ render_field(form.stage1) }}
+                    {{ render_field(form.duration1) }}
+                </div>
+                
+                <div class="vstack col-md-auto gap-2">
+                    {{ render_field(form.stage2) }}
+                    {{ render_field(form.duration2) }}
+                </div>
+
+                <div class="vstack col-md-auto gap-2">
+                    {{ render_field(form.stage3) }}
+                    {{ render_field(form.duration3) }}
+                </div>
+
+                <div class="vstack col-md-auto gap-2">
+                    {{ render_field(form.stage4) }}
+                    {{ render_field(form.duration4) }}
+                </div>
+            </div>
+        </div>
+
+        <div class="row align-self-start gap-5 mx-3 my-lg-5">
+            <div class="hstack col-sm-1 align-content-start">
+                {{ render_field(form.max_pressure) }}
+                {{ render_field(form.sketch_diagram_img) }}
+            </div>
+        </div>
+
+
+
+    </dl>
+    <div class="row flex-nowraw gap-3 mx-3">
+        <input type="hidden" id="fill_from_form" name="fill_from_form" value="true" />
+        <div class="col-md-auto align-self-center"> 
+            <input class="btn align-self-center bg-dark-subtle btn-outline-dark" type="submit" value="{{add_or_edit}}">
+        </div>
+    </div>
+</form>
+
+{% endblock %}

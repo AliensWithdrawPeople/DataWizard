@@ -1,4 +1,4 @@
-from wtforms import Form, DateField, StringField, PasswordField, validators, SelectField, EmailField, FileField
+from wtforms import Form, DateField, StringField, IntegerField, DecimalField, TextAreaField, PasswordField, validators, SelectField, EmailField, FileField
 import datetime
 from wtforms.widgets import Select, html_params
 
@@ -82,3 +82,39 @@ class Unit_form(Form):
     setup_name = StringField('Номер установки')
     sector = StringField('Участок')
     supervisor_name = SelectField('Ответственный') # type:ignore
+    
+class Cat_form(Form):
+    name = StringField('Наименование', validators=[validators.DataRequired(), validators.Length(max=150)])
+    comment = TextAreaField('Характеристики', validators=[validators.Optional(), validators.Length(max=300)])
+    manufacturer = StringField('Производитель', validators=[validators.Optional(), validators.Length(max=150)])
+    manufacturer_logo_img = FileField('Логотип производителя', validators=[validators.Optional()])
+    batch_number = StringField('Партийный номер', validators=[validators.Optional(), validators.Length(max=150)])
+    life_time = IntegerField('Срок эксплуатации, лет', validators=[validators.Optional()])
+    temp_min = DecimalField('Минимальная температура, \u2103', validators=[validators.Optional()])
+    temp_max = DecimalField('Максимальная температура, \u2103', validators=[validators.Optional()])
+    
+    sketch_VIC_img = FileField('Эскиз ВИК', validators=[validators.Optional()])
+    sketch_UZT_img = FileField('Эскиз УЗТ', validators=[validators.Optional()])
+    sketch_UK_img = FileField('Эскиз УК', validators=[validators.Optional()])
+    sketch_MK_img = FileField('Эскиз МК', validators=[validators.Optional()])
+    sketch_diagram_img = FileField('Эскиз диаграммы', validators=[validators.Optional()])
+    
+    T1 = DecimalField('T1', validators=[validators.Optional()])
+    T2 = DecimalField('T2', validators=[validators.Optional()])
+    T3 = DecimalField('T3', validators=[validators.Optional()])
+    T4 = DecimalField('T4', validators=[validators.Optional()])
+    T5 = DecimalField('T5', validators=[validators.Optional()])
+    T6 = DecimalField('T6', validators=[validators.Optional()])
+    T7 = DecimalField('T7', validators=[validators.Optional()])
+    
+    stage1 = DecimalField('Этап 1, МПа', validators=[validators.Optional()])
+    stage2 = DecimalField('Этап 2, МПа', validators=[validators.Optional()])
+    stage3 = DecimalField('Этап 3, МПа', validators=[validators.Optional()])
+    stage4 = DecimalField('Этап 4, МПа', validators=[validators.Optional()])
+    
+    duration1 = IntegerField('Выдержка 1, мин', validators=[validators.Optional()])
+    duration2 = IntegerField('Выдержка 2, мин', validators=[validators.Optional()])
+    duration3 = IntegerField('Выдержка 3, мин', validators=[validators.Optional()])
+    duration4 = IntegerField('Выдержка 4, мин', validators=[validators.Optional()])
+    
+    max_pressure = DecimalField('Максимальное рабочее давленее, МПа', validators=[validators.Optional()])
