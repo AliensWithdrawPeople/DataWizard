@@ -74,7 +74,6 @@
     let delete_list = [];
     var table = $('#tools_table').DataTable({
         retrieve: true,
-        serverSide: true,
         ajax: {
                 url: '/api/data/lab/tools',
                 rowId: 'id',

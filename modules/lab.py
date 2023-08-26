@@ -7,7 +7,7 @@ from passlib.hash import pbkdf2_sha256
 from .db_connecter import get_session
 from . import Models
 
-from .aux_scripts.form_dict import form_tool_dict, form_user_dict
+from .aux_scripts.form_dict import form_tool_dict, form_user_dict, form_json
 from .aux_scripts.Templates_params import sidebar_urls
 from .aux_scripts.forms import Add_user_form, Add_tool_form
 from .aux_scripts.check_role import check_admin, check_inspector
@@ -133,67 +133,31 @@ def edit_user(id):
 @login_required
 def show_Lab_tools():
     check_inspector()
-    is_admin = True if current_user.get_role() == 'admin' else False # type: ignore
+    is_admin = current_user.get_role() == 'admin' # type: ignore
     username = current_user.get_name() # type: ignore
     return render_template('lab_tools.html', is_admin=is_admin, username=username, sidebar_urls=sidebar_urls)
 
 @lab.route("/api/data/lab/tools")
 @login_required
 def tools_json():
-    check_inspector()
     
-    session_db = get_session()
+    def method_filter(selected, model, filter_val):
+        if not filter_val is None and filter_val in Models.method_python_enum._member_names_:
+            selected = selected.where(model.method == filter_val)
+        return selected
     
-    selected = select(Models.Tool)
-    total = len(session_db.scalars(selected).all())
+    def is_active_filter(selected, model, filter_val):
+        if not filter_val is None and filter_val != 'Все':
+            is_active = filter_val == 'Активные'
+            selected = selected.where(model.is_active == is_active)
+        return selected
     
-    # delete users
-    delete_list = request.args.get('delete')
-    if(not delete_list is None and delete_list != ''):
-        delete_list = list(map(int, delete_list.split(",")))
-        if(len(delete_list) > 0):
-            objs = list(session_db.scalars(selected.where(Models.Tool.id.in_(delete_list))).all())
-            for obj in objs:
-                session_db.delete(obj)
-            session_db.commit()
-            selected = select(Models.Tool)
-            
-    # search filter
-    method_filter = request.args.get('method_filter')
-    if not method_filter is None and method_filter in Models.method_python_enum._member_names_:
-            selected = selected.where(Models.Tool.method == method_filter)
-    
-    is_active = request.args.get('is_active')
-    if not is_active is None and is_active != 'Все':
-            is_active = True if is_active == 'Активные' else False
-            selected = selected.where(Models.Tool.is_active == is_active)
-            
-    search = request.args.get('search[value]')
-    if search:
-        selected = selected.where(or_(
-                Models.Tool.name.like(f'%{search}%'),
-                Models.Tool.model.like(f'%{search}%'),
-                Models.Tool.factory_number.like(f'%{search}%'),
-                Models.Tool.inventory_number.like(f'%{search}%'),
-                Models.Tool.checkup_certificate_number.like(f'%{search}%')
-            )
-        )
-    total_filtered = len(session_db.scalars(selected).all())
-    
-    # TODO: sorting
-
-    # pagination
-    start = request.args.get('start', type=int)
-    length = request.args.get('length', type=int)
-         
-    tools = session_db.scalars(selected.offset(start).limit(length)).all()
-    tools = [form_tool_dict(tool) for tool in tools]
-        
-    return {'data': tools,
-            'recordsFiltered': total_filtered,
-            'recordsTotal': total,
-            'draw': request.args.get('draw', type=int),
-        }
+    filter_dict = {
+        'method_filter': method_filter,
+        'is_active': is_active_filter
+    }
+    json = form_json(get_session(), Models.Tool, form_tool_dict, check_inspector, filter_dict)
+    return json
 
 @lab.route("/lab/tools/add", methods=('GET', 'POST'))
 @lab.route("/lab/tools/edit/<id>", methods=('GET', 'POST'), endpoint='edit_tool')
@@ -205,7 +169,7 @@ def add_tool(id=None):
     
     fill_from_form = req_form.get('fill_from_form', type=lambda req: req.lower() == 'true')
     
-    is_admin = True if current_user.get_role() == 'admin' else False # type: ignore
+    is_admin = current_user.get_role() == 'admin' # type: ignore
     username = current_user.get_name() # type: ignore
     add_or_edit = 'Добавить'
     tool_data = {}
