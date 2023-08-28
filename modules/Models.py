@@ -29,7 +29,7 @@ class Company(Base):
     
     id = mapped_column(Integer, primary_key=True, nullable=False)
     name = mapped_column(VARCHAR(100))
-    logo_id = mapped_column(Integer, ForeignKey('images.id'))
+    logo_id = mapped_column(Integer, ForeignKey('images.id'), nullable=True)
     units: Mapped[List["Unit"]] = relationship("Unit", back_populates="company")
     
 class Unit(Base):
@@ -63,6 +63,9 @@ class User(Base):
     units: Mapped[List['Unit']] = relationship('Unit', back_populates='supervisor') 
     reports: Mapped[List['Report']] = relationship('Report', back_populates='inspector') 
     
+    certificate_scan_id = mapped_column(Integer, ForeignKey('images.id'), nullable=True)
+    facsimile_id = mapped_column(Integer, ForeignKey('images.id'), nullable=True)
+    
     def __repr__(self) -> str:
         return f"User(id={self.id!r}, name={self.name!r}, role={self.role!r})"
         
@@ -80,6 +83,9 @@ class Tool(Base):
     prev_checkup: Mapped[Date] = mapped_column(Date, nullable=True)
     next_checkup: Mapped[Date] = mapped_column(Date, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean)
+    
+    checkup_certificate_scan_id = mapped_column(Integer, ForeignKey('images.id'), nullable=True)
+    passport_scan_id = mapped_column(Integer, ForeignKey('images.id'), nullable=True)
 
 class Catalogue(Base):
     __tablename__ = 'catalogue'
@@ -89,7 +95,7 @@ class Catalogue(Base):
     comment = mapped_column(VARCHAR(300))
     
     manufacturer = mapped_column(VARCHAR(200))
-    manufacturer_logo_id = mapped_column(Integer, ForeignKey('images.id'))
+    manufacturer_logo_id = mapped_column(Integer, ForeignKey('images.id'), nullable=True)
     batch_number = mapped_column(VARCHAR(200))
     
     # In years
@@ -98,11 +104,11 @@ class Catalogue(Base):
     temp_min = mapped_column(Integer)
     temp_max = mapped_column(Integer)
     
-    sketch_VIC_id = mapped_column(Integer, ForeignKey('images.id'))
-    sketch_UZT_id = mapped_column(Integer, ForeignKey('images.id'))
-    sketch_UK_id = mapped_column(Integer, ForeignKey('images.id'))
-    sketch_MK_id = mapped_column(Integer, ForeignKey('images.id'))
-    sketch_diagram_id = mapped_column(Integer, ForeignKey('images.id'))
+    sketch_VIC_id = mapped_column(Integer, ForeignKey('images.id'), nullable=True)
+    sketch_UZT_id = mapped_column(Integer, ForeignKey('images.id'), nullable=True)
+    sketch_UK_id = mapped_column(Integer, ForeignKey('images.id'), nullable=True)
+    sketch_MK_id = mapped_column(Integer, ForeignKey('images.id'), nullable=True)
+    sketch_diagram_id = mapped_column(Integer, ForeignKey('images.id'), nullable=True)
     
     T1 = mapped_column(Float)
     T2 = mapped_column(Float)
@@ -184,6 +190,17 @@ class Report(Base):
     
     hydro_result = mapped_column(Text)
     GI_preventor_good = mapped_column(Boolean)
+    
+    GI_body_sketch_id = mapped_column(Integer, ForeignKey('images.id'), nullable=True)
+    """ Эскиз ГИ корпус."""
+    GI_pipes_sketch_id = mapped_column(Integer, ForeignKey('images.id'), nullable=True)
+    """ Эскиз ГИ трубные."""
+    GI_gluhie_sketch_id = mapped_column(Integer, ForeignKey('images.id'), nullable=True)
+    """ I dunno how to translate Эскиз ГИ глухие."""
+    calibration_diagram_sketch_id = mapped_column(Integer, ForeignKey('images.id'), nullable=True)
+    """ Эскиз диаграммы тарировки."""
+    multiple_tests_diagram_sketch_id = mapped_column(Integer, ForeignKey('images.id'), nullable=True)
+    """ Кратные испытания/Эскиз диаграммы испытаний."""
     
     hardware: Mapped[Hardware] = relationship('Hardware', back_populates='reports')
     inspector: Mapped[User] = relationship('User', back_populates='reports') 
