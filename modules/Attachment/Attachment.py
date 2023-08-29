@@ -11,10 +11,12 @@ class Attachment:
             return secure_filename(filename)
         return None  
     
-    def __init__(self, file: FileStorage | None) -> None:
+    def __init__(self, file: FileStorage | None, filename: str | None = None) -> None:
         if file is None:
             return None
-        filename = Attachment.allowed_filename(file.filename)
+        if filename is None:
+            filename = Attachment.allowed_filename(file.filename)
+        
         if filename is None:
             raise ValueError(f'Wrong  filename of {file.name} field.')
         self.__file = file

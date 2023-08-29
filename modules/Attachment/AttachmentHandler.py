@@ -1,24 +1,36 @@
-from genericpath import isfile
-
-from flask import send_file, Response
+from flask import send_file, Response, request
 from sqlalchemy import select 
 from sqlalchemy.exc import NoResultFound
 import os
 from pathlib import PurePath, Path
 
+from wtforms import FileField
+
 from .Attachment import Attachment
 from ..db_connecter import get_session
 from .. import Models
 
-class AttachmentHandler(object):
-    upload_folder = '/uploads'
+class AttachmentHandler:
+    """ Singleton. """
+    # TODO: Decide where to store data.
+    upload_folder = 'modules/Attachment/uploads'
 
-    def __new__(cls):
-        if not hasattr(cls, 'instance'):
-            cls.instance = super(AttachmentHandler, cls).__new__(cls)
-        return cls.instance
+    __instance = None
+    @staticmethod 
+    def getInstance():
+        """ Static access method. """
+        if AttachmentHandler.__instance == None:
+            AttachmentHandler()
+        return AttachmentHandler.__instance
     
-    def upload(self, file: Attachment) -> str | None:
+    def __init__(self):
+        if AttachmentHandler.__instance != None:
+            raise Exception("This class is a singleton!")
+        else:
+            AttachmentHandler.__instance = self
+    
+    @classmethod
+    def upload(cls, file: Attachment) -> int | None:
         """Upload image to the server.
 
         Parameters
@@ -53,9 +65,10 @@ class AttachmentHandler(object):
         img_id = img.id
         session_db.commit()
         session_db.close()
-        return str(img_id)
+        return int(img_id)
     
-    def download(self, img_id: str) -> Response:
+    @classmethod
+    def download(cls, img_id: int) -> Response:
         """Download image from the server.
 
         Parameters
@@ -87,8 +100,9 @@ class AttachmentHandler(object):
         if not os.path.isfile(path):
             raise FileNotFoundError(f'img_id = {img_id} points to a file that does not exist. This id will be deleted from the Database.')
         return send_file(path)
-            
-    def update(self, img_id: str, file: Attachment) -> bool:
+    
+    @classmethod        
+    def update(cls, img_id: int, file: Attachment) -> bool:
         """Updates Image (Image.id == img_id) with the file.
 
         Parameters
@@ -127,3 +141,36 @@ class AttachmentHandler(object):
         if os.path.isfile(prev_path) and prev_path != path:
             os.remove(prev_path)
         return True
+    
+    @classmethod
+    def load_img_from_form(cls, img_field: FileField, img_id: int | None = None)-> int | bool | None:
+        """Load image related to img_field from frontend and upload (or update if img_id is provided) it to the server's Attachment service.
+
+        Parameters
+        ----------
+        img_field : wtforms.FileField
+            wtforms' field related to this image.
+        img_id : str | None, optional
+            id in images table if you need to update image, by default None which means you want to create a new entry in images table.
+
+        Returns
+        -------
+        str | bool | None
+            img_id if new entry in images table was registered | True if the file was successfully updated | No data in the field.
+        """
+        if not img_field.name in request.files or request.files[img_field.name].mimetype.split('/')[0] != 'image':
+            return None
+        image_data = request.files[img_field.name]
+        image_attachment = Attachment(image_data)
+        if not img_id is None:
+            try:
+                return cls.update(img_id, image_attachment)
+            except ValueError:
+                # TODO: Log that the id is wrong.
+                return False
+        else:
+            try:
+                return cls.upload(image_attachment)
+            except RuntimeError:
+                # TODO: Log that file was not saved.
+                return None

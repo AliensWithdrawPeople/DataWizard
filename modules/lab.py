@@ -1,7 +1,9 @@
 import datetime
-from flask import Blueprint, redirect, render_template, request, flash, url_for, session
+from flask import Blueprint, redirect, render_template, request, url_for
 from flask_login import login_required, current_user
-from sqlalchemy import or_, select 
+from modules.Attachment.Attachment import Attachment
+from modules.Attachment.AttachmentHandler import AttachmentHandler
+from sqlalchemy import select 
 from passlib.hash import pbkdf2_sha256
 
 from .db_connecter import get_session
@@ -12,9 +14,12 @@ from .aux_scripts.Templates_params import sidebar_urls
 from .aux_scripts.forms import Add_user_form, Add_tool_form
 from .aux_scripts.check_role import check_admin, check_inspector
 
-
 lab = Blueprint('lab', __name__)
 
+attach_handler = AttachmentHandler.getInstance()
+if attach_handler is None:
+    attach_handler = AttachmentHandler()
+        
 #------------------------ Users ------------------------#
     
 @lab.route("/lab/users", methods=('GET', 'POST'))
@@ -61,6 +66,8 @@ def add_user():
     check_admin()
     form = Add_user_form(request.form)
     if request.method == 'POST' and form.validate():
+        certificate_img_id = attach_handler.load_img_from_form(form.certificate_img)
+        facsimile_id = attach_handler.load_img_from_form(form.facsimile_img)
         user = Models.User(
             password = pbkdf2_sha256.hash(form.password.data),
             name = form.username.data,
@@ -70,7 +77,9 @@ def add_user():
             birthdate = form.birthdate.data,
             position = form.position.data,
             certificate_number = form.certificate_number.data,
-            certificated_till = form.certificated_till.data
+            certificated_till = form.certificated_till.data,
+            certificate_scan_id = certificate_img_id,
+            facsimile_id = facsimile_id
         ) 
         session_db = get_session()
         session_db.add(user)
@@ -112,6 +121,9 @@ def edit_user(id):
         return render_template('edit_user.html', is_admin=True, username=user_obj.name, sidebar_urls=sidebar_urls, form=form)
     
     if request.method == 'POST' and form.validate():
+        certificate_img_id = attach_handler.load_img_from_form(form.certificate_img, user_obj.certificate_scan_id)
+        facsimile_img_id = attach_handler.load_img_from_form(form.facsimile_img, user_obj.facsimile_id)
+        
         user_obj.name = form.username.data
         user_obj.role = form.role.data  # type: ignore
         user_obj.phone_number = form.phone_number.data
@@ -119,7 +131,13 @@ def edit_user(id):
         user_obj.birthdate = form.birthdate.data
         user_obj.position = form.position.data
         user_obj.certificate_number = form.certificate_number.data
-        user_obj.certificated_till = form.certificated_till.data        
+        user_obj.certificated_till = form.certificated_till.data       
+        
+        if type(certificate_img_id) is int:
+            user_obj.certificate_scan_id = certificate_img_id
+        if type(facsimile_img_id) is int:
+            user_obj.facsimile_id = facsimile_img_id
+            
         session_db.commit()
         
         return redirect(url_for(sidebar_urls['Lab.users']))
