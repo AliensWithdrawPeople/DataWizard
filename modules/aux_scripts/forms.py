@@ -55,8 +55,8 @@ class Add_user_form(Form):
     birthdate = NullableDateField('Дата рождения', validators=[validators.Optional()])
     certificate_number = StringField('Номер удостоверения', [validators.Length(max=25)])
     certificated_till = NullableDateField('Срок действия удостоверения', validators=[validators.Optional()])
-    certificate_img = FileField('Скан удостоверенья')
-    facsimile_img = FileField('Факсимиле')
+    certificate_img = FileField('Скан удостоверенья', name = "certificate_img")
+    facsimile_img = FileField('Факсимиле', name = "facsimile_img")
     
 class Add_tool_form(Form):
     name = StringField('Наименование', [validators.Length(min=4, max=250)])
@@ -67,14 +67,14 @@ class Add_tool_form(Form):
     checkup_certificate_number = StringField('Номер свидетельства о поверке', [validators.Optional(), validators.Length(max=250)])
     prev_checkup = NullableDateField('Дата поверки', validators=[RequiredIf(other_field_name='checkup_certificate_number', message='Введите даты поверки')])
     next_checkup = NullableDateField('Дата следующей поверки', validators=[RequiredIf(other_field_name='checkup_certificate_number', message='Введите даты поверки')])
-    checkup_certificate_img = FileField('Скан свидетельства') # It also must have [RequiredIf('checkup_certificate_number')]
-    passport_img = FileField('Скан паспорта')
+    checkup_certificate_img = FileField('Скан свидетельства', validators=[RequiredIf('checkup_certificate_number')], name = "checkup_certificate_img") # It also must have [RequiredIf('checkup_certificate_number')]
+    passport_img = FileField('Скан паспорта', name = "passport_img")
     is_active =  SelectField('Статус', choices=[('Активный', 'Активный'), ('Неактивный', 'Неактивный')])
     
     
 class Company_form(Form):
     name = StringField('Наименование', [validators.Length(min=4, max=250)])
-    logo_img = FileField('Логотип')
+    logo_img = FileField('Логотип', name = "logo_img")
 
 class Unit_form(Form):
     company_name = SelectField('Наименование компании') # type:ignore
@@ -87,17 +87,17 @@ class Cat_form(Form):
     name = StringField('Наименование', validators=[validators.DataRequired(), validators.Length(max=150)])
     comment = TextAreaField('Характеристики', validators=[validators.Optional(), validators.Length(max=300)])
     manufacturer = StringField('Производитель', validators=[validators.Optional(), validators.Length(max=150)])
-    manufacturer_logo_img = FileField('Логотип производителя', validators=[validators.Optional()])
+    manufacturer_logo_img = FileField('Логотип производителя', validators=[validators.Optional()], name = "manufacturer_logo_img")
     batch_number = StringField('Партийный номер', validators=[validators.Optional(), validators.Length(max=150)])
     life_time = IntegerField('Срок эксплуатации, лет', validators=[validators.Optional()])
     temp_min = DecimalField('Минимальная температура, \u2103', validators=[validators.Optional()])
     temp_max = DecimalField('Максимальная температура, \u2103', validators=[validators.Optional()])
     
-    sketch_VIC_img = FileField('Эскиз ВИК', validators=[validators.Optional()])
-    sketch_UZT_img = FileField('Эскиз УЗТ', validators=[validators.Optional()])
-    sketch_UK_img = FileField('Эскиз УК', validators=[validators.Optional()])
-    sketch_MK_img = FileField('Эскиз МК', validators=[validators.Optional()])
-    sketch_diagram_img = FileField('Эскиз диаграммы', validators=[validators.Optional()])
+    sketch_VIC_img = FileField('Эскиз ВИК', validators=[validators.Optional()], name = "sketch_VIC_img")
+    sketch_UZT_img = FileField('Эскиз УЗТ', validators=[validators.Optional()], name = "sketch_UZT_img")
+    sketch_UK_img = FileField('Эскиз УК', validators=[validators.Optional()], name = "sketch_UK_img")
+    sketch_MK_img = FileField('Эскиз МК', validators=[validators.Optional()], name = "sketch_MK_img")
+    sketch_diagram_img = FileField('Эскиз диаграммы', validators=[validators.Optional()], name = "sketch_diagram_img")
     
     T1 = DecimalField('T1', validators=[validators.Optional()])
     T2 = DecimalField('T2', validators=[validators.Optional()])

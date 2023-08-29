@@ -1,5 +1,4 @@
 from typing import List
-from typing import Optional
 from sqlalchemy import ForeignKey
 from sqlalchemy import VARCHAR, Integer, Date, Text, Boolean, Float
 from sqlalchemy.orm import DeclarativeBase
@@ -22,7 +21,7 @@ class Base(DeclarativeBase):
 class Img(Base):
     __tablename__ = 'images'
     id: Mapped[int] = mapped_column(Integer, primary_key=True, nullable=False)
-    src: Mapped[VARCHAR] = mapped_column(VARCHAR(100))
+    src: Mapped[str] = mapped_column(VARCHAR(500), unique=True)
     
 class Company(Base):
     __tablename__ = 'companies'

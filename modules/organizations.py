@@ -1,6 +1,4 @@
-from typing import Callable
-from urllib import response
-from flask import Blueprint, redirect, render_template, request, send_from_directory, url_for, session
+from flask import Blueprint, redirect, render_template, request, send_from_directory, url_for
 from flask_login import login_required, current_user
 from sqlalchemy import or_, select 
 
@@ -10,7 +8,7 @@ from . import Models
 from .aux_scripts.form_dict import form_organization_dict, form_unit_dict, form_json
 from .aux_scripts.Templates_params import sidebar_urls
 from .aux_scripts.forms import Company_form, Unit_form
-from .aux_scripts.check_role import check_admin, check_inspector
+from .aux_scripts.check_role import check_inspector
 
 
 organizations = Blueprint('organizations', __name__)

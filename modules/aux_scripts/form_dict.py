@@ -3,8 +3,6 @@ from datetime import timedelta
 from flask import request, url_for
 from sqlalchemy import select, or_
 
-from pathlib import PurePath
-
 
 def form_json(session_db, model, form_dict_func, check_role_func, filter_dict: dict={}):
     """JSON for a client side table

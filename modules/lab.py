@@ -1,7 +1,6 @@
 import datetime
 from flask import Blueprint, redirect, render_template, request, url_for
 from flask_login import login_required, current_user
-from modules.Attachment.Attachment import Attachment
 from modules.Attachment.AttachmentHandler import AttachmentHandler
 from sqlalchemy import select 
 from passlib.hash import pbkdf2_sha256
