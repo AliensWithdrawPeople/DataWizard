@@ -19,8 +19,8 @@ class AttachmentHandler:
     @staticmethod 
     def getInstance():
         """ Static access method. """
-        if AttachmentHandler.__instance == None:
-            AttachmentHandler()
+        if AttachmentHandler.__instance is None:
+            return AttachmentHandler()
         return AttachmentHandler.__instance
     
     def __init__(self):

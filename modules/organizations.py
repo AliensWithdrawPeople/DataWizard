@@ -1,5 +1,6 @@
 from flask import Blueprint, redirect, render_template, request, send_from_directory, url_for
 from flask_login import login_required, current_user
+from modules.Attachment.AttachmentHandler import AttachmentHandler
 from sqlalchemy import or_, select 
 
 from .db_connecter import get_session
@@ -8,11 +9,13 @@ from . import Models
 from .aux_scripts.form_dict import form_organization_dict, form_unit_dict, form_json
 from .aux_scripts.Templates_params import sidebar_urls
 from .aux_scripts.forms import Company_form, Unit_form
-from .aux_scripts.check_role import check_inspector
+from .aux_scripts.check_role import check_id, check_inspector
 
 
 organizations = Blueprint('organizations', __name__)
 
+attach_handler = AttachmentHandler.getInstance()
+    
 @organizations.route("/clients", methods=('GET', 'POST'))
 @login_required
 def orgs():
@@ -41,6 +44,7 @@ def units_json():
 @login_required
 def add_company(id=None):
     check_inspector()
+    check_id(id, 'Organizations')
     req_form = request.form
     
     form = Company_form(req_form)
@@ -62,16 +66,20 @@ def add_company(id=None):
         return render_template('add_company.html', is_admin=is_admin, username=username, sidebar_urls=sidebar_urls, add_or_edit=add_or_edit, form=form)
         
     if request.method == 'POST' and form.validate():
-        data = {
-            'name'  : form.name.data,
-            'logo_id' : 1
-        }
-        session_db = get_session()
+        data = {'name'  : form.name.data}
+        session_db = get_session()         
         if not id is None:
             obj = session_db.scalars(select(Models.Company).where(Models.Company.id == str(id))).one()
+            logo_img_id = attach_handler.load_img_from_form(form.logo_img, obj.logo_id)
+            if logo_img_id is True:
+                data['logo_id'] = logo_img_id
+                
             for key, val in data.items():
                 setattr(obj, key, val)
         else:        
+            logo_img_id = attach_handler.load_img_from_form(form.logo_img)
+            if type(logo_img_id) is int:
+                data['logo_id'] = logo_img_id
             obj = Models.Company(**data) 
             session_db.add(obj)
             
@@ -84,17 +92,27 @@ def add_company(id=None):
 @login_required
 def send_logo(id):
     check_inspector()
-    res = send_from_directory("C:/work/DataWizard/static/img/", "tiny_logo.png")
-    return res
+    check_id(id, 'Organizations')
+    session_db = get_session()
+    logo_id = session_db.scalars(select(Models.Company.logo_id)).one_or_none()
+    default_res = send_from_directory("C:/work/DataWizard/static/img/", "tiny_logo.png") 
+    if not logo_id is None:
+        try:
+            return attach_handler.download(int(logo_id))
+        except ValueError:
+            # TODO: Log that id is wrong.
+            return default_res
+        except FileNotFoundError:
+            # TODO: Log that file was not found.
+            return default_res   
+    return default_res 
 
 @organizations.route("/clients/unit/add", methods=('GET', 'POST'))
 @organizations.route("/clients/unit/edit/<id>", methods=('GET', 'POST'), endpoint='edit_unit')
 @login_required
 def add_unit(id=None):
     check_inspector()
-    if(not id is None and not id.isdigit()):
-            # Log that some faggot tried to mess with me by passing me shitty id!
-            return redirect(url_for(sidebar_urls['Organizations']))
+    check_id(id, 'Organizations')
         
     req_form = request.form
     form = Unit_form(req_form)

@@ -11,13 +11,11 @@ from . import Models
 from .aux_scripts.form_dict import form_tool_dict, form_user_dict, form_json
 from .aux_scripts.Templates_params import sidebar_urls
 from .aux_scripts.forms import Add_user_form, Add_tool_form
-from .aux_scripts.check_role import check_admin, check_inspector
+from .aux_scripts.check_role import check_admin, check_id, check_inspector
 
 lab = Blueprint('lab', __name__)
 
 attach_handler = AttachmentHandler.getInstance()
-if attach_handler is None:
-    attach_handler = AttachmentHandler()
         
 #------------------------ Users ------------------------#
     
@@ -93,6 +91,7 @@ def add_user():
 @login_required
 def edit_user(id):
     check_admin()
+    check_id(id, 'Lab.users')
     req_form = request.form
     form = Add_user_form(req_form)
     edit_id = str(id)
@@ -131,12 +130,7 @@ def edit_user(id):
         user_obj.position = form.position.data
         user_obj.certificate_number = form.certificate_number.data
         user_obj.certificated_till = form.certificated_till.data       
-        
-        if type(certificate_img_id) is int:
-            user_obj.certificate_scan_id = certificate_img_id
-        if type(facsimile_img_id) is int:
-            user_obj.facsimile_id = facsimile_img_id
-            
+
         session_db.commit()
         
         return redirect(url_for(sidebar_urls['Lab.users']))
@@ -181,6 +175,7 @@ def tools_json():
 @login_required
 def add_tool(id=None):
     check_inspector()
+    check_id(id, 'Lab.tools')
     req_form = request.form
     form = Add_tool_form(req_form)
     
@@ -228,10 +223,15 @@ def add_tool(id=None):
         session_db = get_session()
         if not id is None:
             tool = session_db.scalars(select(Models.Tool).where(Models.Tool.id == str(id))).one()
+            checkup_certificate_scan_id = attach_handler.load_img_from_form(form.checkup_certificate_img, tool.checkup_certificate_scan_id)
+            passport_scan_id = attach_handler.load_img_from_form(form.passport_img, tool.passport_scan_id)
+           
             for key, val in tool_data.items():
                 setattr(tool, key, val)
-        else:        
-            tool = Models.Tool(**tool_data) 
+        else:       
+            checkup_certificate_scan_id = attach_handler.load_img_from_form(form.checkup_certificate_img)
+            passport_scan_id = attach_handler.load_img_from_form(form.passport_img) 
+            tool = Models.Tool(**tool_data, checkup_certificate_scan_id=checkup_certificate_scan_id, passport_scan_id=passport_scan_id) 
             session_db.add(tool)
             
         session_db.commit()
