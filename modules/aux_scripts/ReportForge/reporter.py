@@ -1,10 +1,13 @@
 from enum import Enum
 from genericpath import isdir
 from zipfile import ZipFile
+
+from flask import request
 from jinja2 import Environment, FileSystemLoader
 import os
 import pathlib
 import base64
+import uuid
 
 import sys
 # FIXME: Change path to GTK3.
@@ -16,6 +19,7 @@ from weasyprint import HTML
 class templates(Enum):
     VCM = 'VCM.html'
     UTM = 'UTM.html'
+    MPI = 'MPI.html'
     
 class img(Enum):
     LOGO = 'Weatherford_logo.png'
@@ -36,8 +40,7 @@ def mk_if_not_exist(path: os.PathLike):
         os.mkdir(path)
 
 def get_report(id: int | str, config: list[tuple[templates, str, dict[str, str]]], zip_files: bool) -> pathlib.PurePath | list[pathlib.PurePath]:
-    """_summary_
-
+    """
     id : int | str
         user id.
     config : list[tuple[templates, str, dict[str, str]]]
@@ -65,8 +68,10 @@ def get_report(id: int | str, config: list[tuple[templates, str, dict[str, str]]
         # TODO: Log that 'templates folder' went MIA.
         raise FileNotFoundError("No templates folder. It's gone!!!")
     env = Environment( loader = FileSystemLoader(templates_dir))
-    html_folder = pathlib.PurePath(root, 'html', str(id))
-    pdf_folder = pathlib.PurePath(root, 'pdf', str(id))
+    request_id = uuid.uuid1()
+    folder_name = f"{id}_{request_id}"
+    html_folder = pathlib.PurePath(root, 'html', folder_name)
+    pdf_folder = pathlib.PurePath(root, 'pdf', folder_name)
     mk_if_not_exist(pathlib.PurePath(root, 'html'))
     mk_if_not_exist(pathlib.PurePath(root, 'pdf'))
     mk_if_not_exist(html_folder)
@@ -77,16 +82,16 @@ def get_report(id: int | str, config: list[tuple[templates, str, dict[str, str]]
     outputs: list[pathlib.PurePath] = []
     for template_name, filename, params in config:
         template = env.get_template(template_name.value)
-        html_file_path = pathlib.PurePath(root, 'html', str(id), f'report_{template_name.value}')
+        html_file_path = pathlib.PurePath(root, 'html', folder_name, f'report_{template_name.value}')
         with open(html_file_path, 'w') as html_file:
             html_file.write(template.render(weatherford_logo=logo, stamp=stamp, **params))
     
-        output_file_path = pathlib.PurePath(root, 'pdf', str(id), filename)
+        output_file_path = pathlib.PurePath(root, 'pdf', folder_name, filename)
         HTML(str(html_file_path)).write_pdf(str(output_file_path))
         outputs.append(output_file_path)
 
     if zip_files:
-        output_zip = pathlib.PurePath(root, 'pdf', f'{id}.zip')
+        output_zip = pathlib.PurePath(root, 'pdf', folder_name, f'{request_id}.zip')
         with ZipFile(output_zip, 'w') as myzip:
             for output in outputs:
                 myzip.write(output, arcname=output.name)
@@ -140,11 +145,35 @@ params_UTM = {"title_add" : 'НК-061А0028 (22.02.25)',
                     "sketch" : get_image('stock_sketch.png')
                 }
 
+params_MPI = {"title_add" : 'НК-061А0028 (22.02.25)',
+                    "report_number" : "03604-VCM",
+                    "date" : "30 августа 2023 г.",
+                    "object_name" : 'Кран пробковый 3x3" 1502 MxF Master Valve',
+                    "reg_number" : "WFT MV 12502", 
+                    "serial_number" : "0119", 
+                    "manufacturer" : "Омега", 
+                    "batch_number" : "ИМЗ - 08.330.99", 
+                    "number_1C" : "-", 
+                    "location_and_kit_number" : 'БПО Ноябрьского филиала ООО "Везерфорд"  г.Ноябрьск Склад', 
+                    "tools" : ["Толщиномер УТ-11 ЛУЧ  №0518 от 20.03.23 г.", "Преобразователь ПЭП П112-5-10/2-Т-003 №5404 от 19.03.23 г.", "Номинальная частота контроля: 5 МГц; СОП №7448."],
+                    "ambient_temp" : "+14",
+                    "general_light" : "541",
+                    "surf_light" : "1890",
+                    "executor_position" : 'Специалист II уровня/Specialist of the 2nd level',
+                    "identification" : '0041-2871',
+                    "executor_name" : 'В.Р. Иванов',
+                    "facsimile" : get_image(img.SIGNATURE),
+                    
+                    "sketch" : get_image('stock_sketch.png'),
+                    "is_good" : True,
+                    "defects_position" : None,
+                    "defects_description" : None
+                }
+
 import time
 start = time.perf_counter()
-# get_report(1, [(templates.VCM, 'test_VCM.pdf', params_VCM)], zip_files = False)
 
-
-get_report(1, [(templates.VCM, 'test_VCM.pdf', params_VCM), (templates.UTM, 'test_UTM.pdf', params_UTM),], zip_files = True)
+# get_report(1, [(templates.VCM, 'test_VCM.pdf', params_VCM), (templates.UTM, 'test_UTM.pdf', params_UTM),], zip_files = True)
+get_report(2, [(templates.MPI, 'test_MPI.pdf', params_MPI)], zip_files = False)
 end = time.perf_counter()
 print(end - start)
