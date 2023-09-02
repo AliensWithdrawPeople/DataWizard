@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+    <style>
+        @page {
+        size: A4; /* Change from the default size of A4 */
+        margin-top: 5mm;
+        margin-bottom: 5mm;
+
+        margin-left: 10mm;
+        margin-right: 10mm;
+      }
+    </style>
+</head>
+
+<body style="font-family: 'Times New Roman', Times, serif;">
+    <div id="printPage" class="page" style="font-size: 10pt;">
+        <div class="hstack justify-content-start">
+            <img src="{{ weatherford_logo }}" style="width: 36px; height: auto; font-size: 12pt;"/>
+            <div class="vstack align-self-center text-center flex-nowrap">
+                <span><b>ООО &#171;ВЕЗЕРФОРД&#187;/Weatherford LLC {{ title_add }}</b></span>
+                <span><b>Заключение/Conclusion №WFT {{ report_number }}</b></span>
+            </div>
+        </div>
+
+        <div class="row justify-content-end mb-1">
+            <div class="col-auto align-self-end mx-1">
+                <span><b>от {{ date }}</b></span>
+            </div>
+        </div>
+
+        <div class="vstack gap-1">
+            <b>Наименование объекта контроля/Name of the object of control:</b>
+            <b>{{ object_name }}</b>
+        </div>
+        <div class="row justify-content-center">
+            <table class="table-responsive-sm table-bordered border-black align-self-center" style="font-size: 9pt;">
+                <tbody>
+                    <tr>
+                        <th>Регистрационный номер/Registration number:</th>
+                        <td>{{ reg_number }}</td>
+                    </tr>
+
+                    <tr>
+                        <th>Серийный номер/Serial number:</th>
+                        <td>{{ serial_number }}</td>
+                    </tr>
+
+                    <tr>
+                        <th>Производитель/Manufacturer:</th>
+                        <td>{{ manufacturer }}</td>
+                    </tr>
+
+                    <tr>
+                        <th>Номер партии/Batch number:</th>
+                        <td>{{ batch_number }}</td>
+                    </tr>
+
+                    <tr>
+                        <th>1C Номер/1C Number:</th>
+                        <td>{{ number_1C }}</td>
+                    </tr>
+
+                    <tr>
+                        <th colspan="2">Место проведения контроля и номер комлекта/Control location and kit number:</th>
+                    </tr>
+                    <tr>
+                        <td colspan="2">{{ location_and_kit_number }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="vstack mt-1 mb-1 gap-0">
+            <span><b>Контроль проводился согласно/The control was carried out in accordance with:</b></span>
+            {% block Standards %}{% endblock %}
+        </div>
+        
+        <div class="vstack gap-0 mb-1">
+            <span><b>Применяемые средства измерений/Measuring instruments used:</b></span>
+            {% for tool in tools %}
+                <span>{{ tool }}</span>
+            {% endfor %}
+        </div>
+
+        {% block Sketch %}{% endblock %}
+
+        <div class="vstack gap-0 mb-1">
+            <span><b>Условия контроля/Control conditions:</b></span>
+            <span>Температура окружающей среды/Ambient temperature: {{ ambient_temp }} &#8451;;</span>
+            <span>Освещённость общая/Lighting: General: {{ general_light }} лк;</span>
+            <span>Освещенность поверхности объекта контроля/Illumination of the surface of the object of control: {{ surf_light }} лк.</span>
+            {% block Conditions %}{% endblock %}
+        </div>
+
+        <div class="vstack gap-0 mb-1">
+            <span><b>Контролю подвергались/Were subjected to control:</b></span>
+            <span>Внутренние полости, наружная поверхность, соединительные элементы и работоспособность 
+                оборудования./Internal cavities, external surface, connecting elements and equipment operability.</span>
+        </div>
+
+        {% block Comment %}{% endblock %}
+
+        {% block Conclusion %}{% endblock %}
+
+        <div class="row justify-content-start mt-3">
+            <div class="col-auto">
+                <div class="vstack gap-0">
+                    <span>Исполнитель/Control executor:</span>
+                    <span>{{ executor_position }}</span>
+                    <span>Удостоверение/Identification №{{ identification }}</span>
+                </div>
+            </div>
+
+            <div class="col-auto offset-1">
+                <img src="{{ stamp }}" style="width: 96px; height: auto;"/>
+                
+            </div>
+
+            <div class="col-auto offset-1">
+                <img src="{{ facsimile }}" style="width: 96px; height: auto;"/>      
+            </div>
+
+            <div class="col-auto offset-1 align-self-baseline" style="font-size: 12pt;">
+                <span class="align-text-bottom text-nowrap">{{ executor_name }}</span>      
+            </div>
+        </div>
+
+    </div>
+</body>

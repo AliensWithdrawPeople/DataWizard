@@ -1,0 +1,80 @@
+{% extends 'base_report.html' %}
+
+{% block Standards %}
+<span class="flex-wrap">"ГОСТ 20415-82., ГОСТ Р 55614-2013., ГОСТ 633-80."</span>
+{% endblock %}
+
+{% block Sketch %}
+<img src="{{ sketch }}" alt="Эскиз объекта контроля с указанием сечений толщинометрии." style="width:100%;  height:192px;"/>
+<div class="row justify-content-center text-center">
+    <span class="text-wrap">Эскиз объекта контроля с указанием сечений толщинометрии/Sketch of the control object with indication of the thickness measurement areas</span>
+</div>
+{% endblock %}
+
+{% block Comment %}
+<div class="row justify-content-center">
+    <table class="table-responsive-sm table-bordered border-black align-self-center caption-top" style="font-size: 8pt;">
+        <caption class="text-center">Таблица измерений/Measurement table.</caption>
+        <thead>
+            <tr>
+                <th rowspan="2" style="border-right: 2px solid;">Сечение/Section:</th>
+                <th colspan="7" style="border-right: 2px solid;">Фактическая/Actual:</th>
+                <th colspan="7">Минимальная/Minimal:</th>
+            </tr>
+            <tr>
+                <th>t1</th>
+                <th>t2</th>
+                <th>t3</th>
+                <th>t4</th>
+                <th>t5</th>
+                <th>t6</th>
+                <th style="border-right: 2px solid;">t7</th>
+
+                <th class="bg-success-subtle">t1</th>
+                <th class="bg-success-subtle">t2</th>
+                <th class="bg-success-subtle">t3</th>
+                <th class="bg-success-subtle">t4</th>
+                <th class="bg-success-subtle">t5</th>
+                <th class="bg-success-subtle">t6</th>
+                <th class="bg-success-subtle">t7</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="border-right: 2px solid;">Минимальная толщина, мм</td>
+                {% for t in ts %}
+                    {% if not loop.last %}
+                        <td>{{ t if t is not none else '-' }}</td>
+                    {% else %}
+                        <td style="border-right: 2px solid;">{{ t if t is not none else '-' }}</td>
+                    {% endif %}
+                {% endfor %}
+
+                {% for minimal_t in minimal_ts %}
+                    <td class="bg-success-subtle">{{ minimal_t if minimal_t is not none else '-' }}</td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <td style="border-right: 2px solid;"> Minimal thickness, in</td>
+                {% for t in ts %}
+                    {% if not loop.last %}
+                        <td>{{ t * 0.039 if t is not none else '-' }}</td>
+                    {% else %}
+                        <td style="border-right: 2px solid;">{{ t * 0.039|round(2) if t is not none else '-' }}</td>
+                    {% endif %}
+                {% endfor %}
+
+                {% for minimal_t in minimal_ts %}
+                    <td class="bg-success-subtle">{{ minimal_t * 0.039|round(2) if minimal_t is not none else '-' }}</td>
+                {% endfor %}
+            </tr>
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block Conclusion %}
+<p><b>Вывод</b>: обнаруженные толщины <u>не менее</u> предельно допустимых значений<br />
+<b>Conclusion</b>: the detected thicknesses are <u>not less</u> than the maximum permissible values.</p>
+<p class="mb-2"><b>Оценка контроля/Assessment of control: <u>годен/working properly</u>.</b></p>
+{% endblock %}
