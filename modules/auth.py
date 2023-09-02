@@ -1,6 +1,6 @@
-from flask import Blueprint, redirect, render_template, request, flash, url_for, session
+from flask import Blueprint, redirect, render_template, request, flash, url_for
 from .User_info import User_info
-from flask_login import LoginManager, login_required, login_user, current_user, logout_user
+from flask_login import LoginManager, login_required, login_user, logout_user
 
 from .aux_scripts.Templates_params import sidebar_urls
 

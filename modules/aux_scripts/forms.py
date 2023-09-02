@@ -67,7 +67,7 @@ class Add_tool_form(Form):
     checkup_certificate_number = StringField('Номер свидетельства о поверке', [validators.Optional(), validators.Length(max=250)])
     prev_checkup = NullableDateField('Дата поверки', validators=[RequiredIf(other_field_name='checkup_certificate_number', message='Введите даты поверки')])
     next_checkup = NullableDateField('Дата следующей поверки', validators=[RequiredIf(other_field_name='checkup_certificate_number', message='Введите даты поверки')])
-    checkup_certificate_img = FileField('Скан свидетельства', validators=[RequiredIf('checkup_certificate_number')], name = "checkup_certificate_img") # It also must have [RequiredIf('checkup_certificate_number')]
+    checkup_certificate_img = FileField('Скан свидетельства', name = "checkup_certificate_img") # It also must have [RequiredIf('checkup_certificate_number')]
     passport_img = FileField('Скан паспорта', name = "passport_img")
     is_active =  SelectField('Статус', choices=[('Активный', 'Активный'), ('Неактивный', 'Неактивный')])
     
