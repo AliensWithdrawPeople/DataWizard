@@ -1,0 +1,6 @@
+*.png
+*.jpeg
+*.jpg
+*.pyc
+/modules/aux_scripts/ReportForge/html
+/modules/aux_scripts/ReportForge/pdf
