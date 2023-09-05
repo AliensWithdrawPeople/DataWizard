@@ -1,0 +1,71 @@
+{% extends 'base_report.html' %}
+
+{% block Standards %}
+<span class="flex-wrap">РД 13-05-2006., ГОСТ Р 56512-2015., 0398.00.000 МУ.,ГОСТ 21105-87.</span>
+{% endblock %}
+
+{% block Sketch %}
+<div class="vstack gap-0" style="font-size: 9pt;">
+    <span><b>Методика контроля/Control methods:</b></span>
+    <span>Метод приложенного поля/Method from the attached field.</span>
+    <span>Полюсное намагничивание соленоидом (электромагнита)/Magnetization of the pole by a solenoid (electromagnet).</span>
+    <span>Тип намагничивающего тока:переменный/Type of magnetization current: variable.</span>
+    <span>Сила магнитного поля/Magnetic field strength: не менее 70 А/см.</span>
+    <span class="text-wrap">УФ-излучение на поверхности контролируемого изделия/Ultraviolet radiation on the surface of the controlled product: 3000 мкВт/см<sup>2</sup>.</span>
+</div>
+
+<img src="{{ sketch }}" alt="Эскиз объекта контроля/Sketch of the control object" style="width:100%;  height:150px;"/>
+<div class="row justify-content-center text-center">
+    <span class="text-wrap">Эскиз объекта контроля/Sketch of the control object</span>
+</div>
+{% endblock %}
+
+{% block Comment %}
+<div class="vstack justify-content-start">
+    <span class="text-wrap"><b>Приложение/Application:</b> диаграмма гидравлического испытания/hydraulic test diagram: №WFT {{ report_number }}.</span>
+    <span><b>Этапы испытания:</b></span>
+    <span class="ms-sm-1">1 этап - Р₁ = 39,6 МПа, время выдержки 10 минут;</span>
+    <span class="ms-sm-1">2 этап - Р₂ = 71,1 МПа, время выдержки 10 минут;</span>
+    <span class="ms-sm-1">3 этап - Р₃ = 105,0 МПа, время выдержки 10 минут.</span>
+</div>
+{% endblock %}
+
+{% block Conclusion %}
+{% if is_good is true %}
+    <span><b>Заключение/Conclusion</b>: Объект испытание давлением P = {{ actual_max_pressure }} МПа выдержал/the object has passed hydraulic tests.</span>
+    <span>Оборудование работающее под давлением следует считать выдержавшим гидравлическое испытание, так как не были выявлены следующие факторы:</span>
+    <span class="text-wrap">Видимые остаточные деформации, трещины и признаки разрыва, течи, потения в сварных, развальцованных, заклёпочных соединениях 
+                            и в основном металле, течи в разъёмных соединениях и падения давления по манометру не наблюдалось.</span>
+    <span>После выдержки под давлением и снижения давления до нуля выполнялся осмотр объекта контроля. <b><u>Деформации оборудования не обнаружено. Герметично.</u></b></span>
+
+    <span>It should be assumed that the equipment operating under pressure has passed the hydraulic test, since the following factors have not been identified:</span>
+    <span class="text-wrap">There were no visible residual deformations, cracks and signs of rupture, leaks, swelling in welded, bell-shaped, riveted joints 
+                            and in the base metal, leaks in detachable joints and pressure drop on the pressure gauge</span>
+    <span>After the pressure was applied and it was reduced to zero, the control object was checked. <b><u>No deformation of the equipment was detected. Hermetically sealed.</u></b></span>
+{& else &}
+    <span><b>Заключение/Conclusion</b>: Объект испытание давлением P = {{ actual_max_pressure }} МПа не выдержал/failed the object passed hydraulic tests.</span>
+    <span class="text-wrap">Положительным результатом испытания считалось бы выдержка объектом испытания давления равного P = {{ actual_max_pressure }} МПа/
+            The positive result of the test would be the exposure of the test object to a pressure equal to  P = {{ actual_max_pressure }} MPa.
+    </span>
+
+    <span class="text-wrap">В процессе проведения гидравлического испытания пробным веществом (вода), было установлено, что объект не обеспечивает необходимую герметичность, при подаче 
+                            пробного вещества (воды) в полость объекта наблюдались пропуски пробного вещества через элементы объекта испытания которые должны обеспечивать герметичность."</span>
+    <span class="text-wrap">In the process of conducting a hydraulic test with a test substance (water), it was found that the object does not provide the necessary tightness, 
+                            when feeding the test substance (water) into the cavity of the object, passes of the test substance through the elements of the test object that should ensure tightness were observed.</span>
+{% endif %}
+{% endblock %}
+
+
+{% block SecondPage %}
+    <div id="Page2" class="page" style="font-size: 10pt;">
+        <div class="hstack justify-content-start">
+            <img src="{{ weatherford_logo }}" style="width: 36px; height: auto; font-size: 12pt;"/>
+            <div class="vstack align-self-center text-center flex-nowrap">
+                <span><b>ООО &#171;ВЕЗЕРФОРД&#187;/Weatherford LLC ЛНК-061А0028 (22.02.25)</b></span>
+                <span><b>Заключение/Conclusion №WFT {{ report_number }}</b></span>
+            </div>
+        </div>
+        <br/>
+        <img src="{{ sketch }}" alt="диаграмма гидравлического испытания/hydraulic test diagram" style="width:100%;  height:500px;"/>
+    </div>
+{% endblock %}

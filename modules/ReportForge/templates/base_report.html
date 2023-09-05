@@ -16,11 +16,11 @@
 </head>
 
 <body style="font-family: 'Times New Roman', Times, serif;">
-    <div id="printPage" class="page" style="font-size: 10pt;">
+    <div id="Page1" class="page" style="font-size: 10pt;">
         <div class="hstack justify-content-start">
             <img src="{{ weatherford_logo }}" style="width: 36px; height: auto; font-size: 12pt;"/>
             <div class="vstack align-self-center text-center flex-nowrap">
-                <span><b>ООО &#171;ВЕЗЕРФОРД&#187;/Weatherford LLC {{ title_add }}</b></span>
+                <span><b>ООО &#171;ВЕЗЕРФОРД&#187;/Weatherford LLC ЛНК-061А0028 (22.02.25)</b></span>
                 <span><b>Заключение/Conclusion №WFT {{ report_number }}</b></span>
             </div>
         </div>
@@ -81,7 +81,7 @@
         <div class="vstack gap-0 mb-1">
             <span><b>Применяемые средства измерений/Measuring instruments used:</b></span>
             {% for tool in tools %}
-                <span>{{ tool }}</span>
+                <span style="font-size: 8pt;">{{ tool }}</span>
             {% endfor %}
         </div>
 
@@ -129,4 +129,7 @@
         </div>
 
     </div>
+
+    <!-- Next Page -->
+    {% block SecondPage %}{% endblock %}
 </body>
