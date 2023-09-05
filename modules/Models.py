@@ -5,7 +5,7 @@ from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
-from sqlalchemy.dialects.postgresql import ENUM
+from sqlalchemy.dialects.postgresql import ENUM, ARRAY
 from enum import Enum
 
 
@@ -14,6 +14,14 @@ role_python_enum = Enum('role_python_enum', ['admin', 'inspector', 'client'])
 
 method_enum = ENUM('ВИК', 'УЗТ', 'УК', 'МК', 'ПВК', 'ГИ', name='method_enum')
 method_python_enum = Enum('method_python_enum', ['ВИК', 'УЗТ', 'УК', 'МК', 'ПВК', 'ГИ'])
+
+report_type_postgres = ENUM('VCM', 'UTM', 'MPI', 'HT', name='report_type_postgres')
+
+class report_type(Enum):
+    VCM = 'VCM'
+    UTM = 'UTM'
+    MPI = 'MPI'
+    HT = 'HT'
 
 class Base(DeclarativeBase):
     pass
@@ -161,9 +169,11 @@ class Report(Base):
     id = mapped_column(Integer, primary_key=True)
     hardware_id = mapped_column(Integer, ForeignKey('hardware.id'))
     inspector_id = mapped_column(Integer, ForeignKey('users.id'))
-    checkup = mapped_column(Date)
     
-    ambinet_temp = mapped_column(Float)
+    report_types: Mapped[ARRAY] = mapped_column(ARRAY(report_type_postgres))
+    checkup_date: Mapped[Date] = mapped_column(Date)
+    
+    ambient_temp = mapped_column(Float)
     total_light = mapped_column(Float)
     surface_light = mapped_column(Float)
     
