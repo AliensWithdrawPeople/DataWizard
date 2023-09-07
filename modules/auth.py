@@ -1,6 +1,6 @@
-from flask import Blueprint, redirect, render_template, request, flash, url_for
+from flask import Blueprint, redirect, render_template, request, url_for, current_app
 from .User_info import User_info
-from flask_login import LoginManager, login_required, login_user, logout_user
+from flask_login import LoginManager, current_user, login_required, login_user, logout_user
 
 from .aux_scripts.Templates_params import sidebar_urls
 
@@ -34,17 +34,14 @@ def login():
             return render_template('login.html', user_email=email)
         else:
             login_user(user, remember=remember)
-            flash("Logged in successfully!")
+            current_app.logger.info('User #%s was successfully logged in.', user.get_id(), exc_info=True)
             return redirect(url_for('index'))
     
     return render_template('login.html', user_email='')
-
-@auth.route('/signup')
-def signup():
-    return 'Signup'
 
 @auth.route('/logout')
 @login_required
 def logout():
     logout_user()
+    current_app.logger.info('User #%s was logged out.', current_user.id , exc_info=True) # type: ignore
     return redirect(url_for(sidebar_urls['LogIn']))

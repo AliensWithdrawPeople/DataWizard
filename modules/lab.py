@@ -1,5 +1,5 @@
 import datetime
-from flask import Blueprint, redirect, render_template, request, url_for
+from flask import Blueprint, current_app, redirect, render_template, request, url_for
 from flask_login import login_required, current_user
 from modules.Attachment.AttachmentHandler import AttachmentHandler
 from sqlalchemy import select 
@@ -32,7 +32,6 @@ def users_json():
     check_admin()
     
     session_db = get_session()
-    
     selected = select(Models.User)
     
     # delete users
@@ -40,6 +39,7 @@ def users_json():
     if(not delete_users is None and delete_users != ''):
         delete_users = list(map(int, delete_users.split(",")))
         if(len(delete_users) > 0):
+            current_app.logger.info('Wow! I am deleting them: %s', delete_users, exc_info=True)
             user_objs = list(session_db.scalars(selected.where(Models.User.id.in_(delete_users))).all())
             for user_obj in user_objs:
                 if(str(user_obj.id) != current_user.get_id()): # type: ignore
@@ -81,6 +81,7 @@ def add_user():
         session_db = get_session()
         session_db.add(user)
         session_db.commit()
+        current_app.logger.info('User #%s was successfully added.', user.id, exc_info=True)
         return redirect(url_for(sidebar_urls['Lab.users']))
     
     username = current_user.get_name() # type: ignore
@@ -132,7 +133,7 @@ def edit_user(id):
         user_obj.certificated_till = form.certificated_till.data       
 
         session_db.commit()
-        
+        current_app.logger.info('User #%s was successfully edited.', user_obj.id, exc_info=True)
         return redirect(url_for(sidebar_urls['Lab.users']))
             
     username = current_user.get_name() # type: ignore
@@ -190,7 +191,8 @@ def add_tool(id=None):
         session_db = get_session()
         tool_obj = session_db.scalars(select(Models.Tool).where(Models.Tool.id == str(id))).one_or_none()
         if(tool_obj is None):
-            raise RuntimeError('edit_tool: tool_obj is none')
+            current_app.logger.exception('RuntimeError: tool_obj #%s is none.', id, exc_info=True)
+            return redirect(url_for(sidebar_urls['Lab.tools']))
         
         form.name.data = tool_obj.name
         form.method.data = tool_obj.method # type: ignore
@@ -228,11 +230,13 @@ def add_tool(id=None):
            
             for key, val in tool_data.items():
                 setattr(tool, key, val)
+            current_app.logger.info('Tool #%s was successfully edited.', tool.id, exc_info=True)
         else:       
             checkup_certificate_scan_id = attach_handler.load_img_from_form(form.checkup_certificate_img)
             passport_scan_id = attach_handler.load_img_from_form(form.passport_img) 
             tool = Models.Tool(**tool_data, checkup_certificate_scan_id=checkup_certificate_scan_id, passport_scan_id=passport_scan_id) 
             session_db.add(tool)
+            current_app.logger.info('Tool #%s was successfully added.', tool.id, exc_info=True)
             
         session_db.commit()
         return redirect(url_for(sidebar_urls['Lab.tools']))

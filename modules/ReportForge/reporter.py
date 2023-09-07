@@ -7,7 +7,7 @@ import dataclasses
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
 from sqlalchemy import select
-from flask import request, session
+from flask import current_app
 from flask_login import current_user
 from jinja2 import Environment, FileSystemLoader
 import os
@@ -24,6 +24,7 @@ from weasyprint import HTML
 
 from ..db_connecter import get_session
 from ..Models import Report, report_type, Img
+import config
 
 # Helper functions
 def date_to_rus(date: datetime.date)->str:
@@ -124,17 +125,18 @@ class Reporter:
     @staticmethod 
     def __mk_if_not_exist(path: os.PathLike):
         if not os.path.isdir(path):
+            current_app.logger.info('Oops! I am gonna mkdir %s cause it does not exist.', path, exc_info=True)
             os.mkdir(path)
             
     root = os.path.dirname(os.path.abspath(__file__))
-    # FIXME: Change storage directory.
-    storage_dir = pathlib.PurePath(root)
+    storage_dir = config.reports_folder
     templates_dir = pathlib.PurePath(root, 'templates')
     __instance = None
     @staticmethod 
     def getInstance():
         """ Static access method. """
         if Reporter.__instance is None:
+            current_app.logger.info('Reporter was created.', exc_info=True)
             return Reporter()
         return Reporter.__instance
     
@@ -150,23 +152,29 @@ class Reporter:
         try:
             report = session_db.scalars(select(Report).where(Report.id == int(report_id))).one()
             try:
+                current_app.logger.info('Creating report #%s for user #%s.', report_id, current_user.id, exc_info=True) # type: ignore
                 config = generate_config(report)
                 _, res = cls.__create_report(current_user.id, config, True) # type: ignore
                 return res
             except FileNotFoundError as e:
-                raise e
+                current_app.logger.critical('ALARM!!! %s', e, exc_info=True)
+                return None
         except (NoResultFound, MultipleResultsFound) as e:
-            #TODO: Log that report_id is wrong. 
+            current_app.logger.error('Report_id is wrong: %s', e, exc_info=True)
             return None 
         
         
     @classmethod    
-    def get_image(cls, image: img | str | None) -> str | None:
+    def get_image(cls, image: img | str | os.PathLike | None) -> str | None:
         weatherford_logo = None
         if image is None:
+            current_app.logger.info('No images cause i did not find file None was passed', exc_info=True)
             return None
-        filename = image.value if type(image) is img else str(image)
-        with open(pathlib.PurePath(cls.storage_dir, 'templates', filename), "rb") as image_file:
+        filename: pathlib.PurePath = pathlib.PurePath(cls.storage_dir, 'templates', image.value) if type(image) is img else pathlib.PurePath(str(image))
+        if not os.path.isfile(filename):
+            current_app.logger.warning('No images cause i did not find file %s', filename, exc_info=True)
+            return None
+        with open(filename, "rb") as image_file:
             weatherford_logo = 'data:image/png;base64,' + base64.b64encode(image_file.read()).decode()
         return weatherford_logo
     
@@ -195,8 +203,7 @@ class Reporter:
             Can't find folder with templates.
         """
         if not os.path.isdir(cls.templates_dir):
-            # TODO: Log that 'templates folder' went MIA.
-            raise FileNotFoundError("No templates folder. It's gone!!!")
+            raise FileNotFoundError("No folder with templates. It's gone!!!")
         env = Environment( loader = FileSystemLoader(cls.templates_dir))
         request_id = uuid.uuid1()
         folder_name = f"{id}_{request_id}"

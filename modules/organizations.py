@@ -1,4 +1,4 @@
-from flask import Blueprint, redirect, render_template, request, send_from_directory, url_for
+from flask import Blueprint, redirect, render_template, request, send_from_directory, url_for, current_app
 from flask_login import login_required, current_user
 from modules.Attachment.AttachmentHandler import AttachmentHandler
 from sqlalchemy import or_, select 
@@ -31,11 +31,13 @@ def orgs():
 @organizations.route("/api/data/companies")
 @login_required
 def organizations_json():
+    current_app.logger.info('Loading %s', '/api/data/companies', exc_info=True)
     return form_json(get_session(), Models.Company, form_organization_dict, check_inspector)
 
 @organizations.route("/api/data/units")
 @login_required
 def units_json():
+    current_app.logger.info('Loading %s', "/api/data/units", exc_info=True)
     return form_json(get_session(), Models.Unit, form_unit_dict, check_inspector)
 
 
@@ -76,12 +78,14 @@ def add_company(id=None):
                 
             for key, val in data.items():
                 setattr(obj, key, val)
+            current_app.logger.info('Company #%s was successfully edited.', obj.id, exc_info=True)
         else:        
             logo_img_id = attach_handler.load_img_from_form(form.logo_img)
             if type(logo_img_id) is int:
                 data['logo_id'] = logo_img_id
             obj = Models.Company(**data) 
             session_db.add(obj)
+            current_app.logger.info('Company #%s was successfully added.', obj.id, exc_info=True)
             
         session_db.commit()
         return redirect(url_for(sidebar_urls['Organizations']))
@@ -99,11 +103,11 @@ def send_logo(id):
     if not logo_id is None:
         try:
             return attach_handler.download(int(logo_id))
-        except ValueError:
-            # TODO: Log that id is wrong.
+        except ValueError as e:
+            current_app.logger.warning('Yo! Im gonna return default logo cause %s', e, exc_info=True)
             return default_res
-        except FileNotFoundError:
-            # TODO: Log that file was not found.
+        except FileNotFoundError as e:
+            current_app.logger.warning('Yo! Im gonna return default logo cause %s', e, exc_info=True)
             return default_res   
     return default_res 
 
@@ -159,9 +163,11 @@ def add_unit(id=None):
             obj = session_db.scalars(select(Models.Unit).where(Models.Unit.id == str(id))).one()
             for key, val in data.items():
                 setattr(obj, key, val)
+            current_app.logger.info('Unit #%s was successfully edited.', obj.id, exc_info=True)    
         else:        
             obj = Models.Unit(**data) 
             session_db.add(obj)
+            current_app.logger.info('Unit #%s was successfully added.', obj.id, exc_info=True)
             
         session_db.commit()
         return redirect(url_for(sidebar_urls['Organizations']))

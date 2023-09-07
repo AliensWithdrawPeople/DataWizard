@@ -1,7 +1,7 @@
 from .. import Models
 from datetime import timedelta
-from flask import request, url_for
-from sqlalchemy import select, or_
+from flask import request, url_for, current_app
+from sqlalchemy import select
 
 
 def form_json(session_db, model, form_dict_func, check_role_func, filter_dict: dict={}):
@@ -32,6 +32,7 @@ def form_json(session_db, model, form_dict_func, check_role_func, filter_dict: d
         delete_list = list(map(int, delete_list.split(",")))
         print('delete_list =', delete_list, flush=True)
         if(len(delete_list) > 0):
+            current_app.logger.info('Wow! I am deleting them: %s', delete_list, exc_info=True)
             objs = list(session_db.scalars(selected.where(model.id.in_(delete_list))).all())
             for obj in objs:
                 session_db.delete(obj)
@@ -77,7 +78,8 @@ def form_server_side_json(session_db, model, form_dict_func, check_role_func, wh
     delete_list = request.args.get('delete')
     if(not delete_list is None and delete_list != ''):
         delete_list = list(map(int, delete_list.split(",")))
-        if(len(delete_list) > 0):
+        if(len(delete_list) > 0):      
+            current_app.logger.info('Wow! I am deleting them: %s', delete_list, exc_info=True)
             objs = list(session_db.scalars(selected.where(model.id.in_(delete_list))).all())
             for obj in objs:
                 session_db.delete(obj)
@@ -158,10 +160,6 @@ def form_tool_dict(tool: Models.Tool)->dict:
         'Статус' : 'Активный' if tool.is_active else 'Неактивный'
     }
     return res
-
-# TODO: Create a normal implementation.
-def get_logo_src(id: int):
-    return "C:/work/DataWizard/static/img/" + "small_logo.png"
 
 def form_organization_dict(org: Models.Company)->dict:
     res = {

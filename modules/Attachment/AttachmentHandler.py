@@ -1,8 +1,8 @@
-from flask import send_file, Response, request
+from flask import send_file, Response, request, current_app
 from sqlalchemy import select 
 from sqlalchemy.exc import NoResultFound
 import os
-from pathlib import PurePath, Path
+from pathlib import PurePath
 
 from wtforms import FileField
 
@@ -10,10 +10,12 @@ from .Attachment import Attachment
 from ..db_connecter import get_session
 from .. import Models
 
+import config
+
+
 class AttachmentHandler:
     """ Singleton. """
-    # TODO: Decide where to store data.
-    upload_folder = 'modules/Attachment/uploads'
+    upload_folder = config.attachment_upload_folder
 
     __instance = None
     @staticmethod 
@@ -49,7 +51,7 @@ class AttachmentHandler:
             File was not saved.
         """
         session_db = get_session()
-        img = Models.Img(src = 'tmp.png')
+        img = Models.Img(src = '')
         session_db.add(img)
         session_db.flush()
         
@@ -59,7 +61,7 @@ class AttachmentHandler:
             session_db.delete(img)
             session_db.flush()
             session_db.commit()
-            # log that 'File was not saved.'
+            current_app.logger.warning('Attachment %s was not saved.', path.name, exc_info=True)
             return None
         img.src = str(path)
         img_id = img.id
@@ -133,6 +135,7 @@ class AttachmentHandler:
         is_saved = file.save(path)
         if not is_saved:
             session_db.close()
+            current_app.logger.warning('Attachment %s with img_id=%s was not updated cause file was not saved.', path.name, img_id, exc_info=True)
             return False
         
         img.src = str(path)
@@ -159,18 +162,19 @@ class AttachmentHandler:
             img_id if new entry in images table was registered | True if the file was successfully updated | No data in the field.
         """
         if not img_field.name in request.files or request.files[img_field.name].mimetype.split('/')[0] != 'image':
+            current_app.logger.warning('Image was not loaded from form cause either it is not an image or it was not provided by user.', exc_info=True)
             return None
         image_data = request.files[img_field.name]
         image_attachment = Attachment(image_data)
         if not img_id is None:
             try:
                 return cls.update(img_id, image_attachment)
-            except ValueError:
-                # TODO: Log that the id is wrong.
+            except ValueError as e:
+                current_app.logger.warning(f'DB problem: %s', e, exc_info=True)
                 return False
         else:
             try:
                 return cls.upload(image_attachment)
-            except RuntimeError:
-                # TODO: Log that file was not saved.
+            except RuntimeError as e:
+                current_app.logger.critical(f'Problem with saving files: %s', e, exc_info=True)
                 return None
