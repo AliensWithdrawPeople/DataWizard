@@ -1,6 +1,5 @@
 from wtforms import Form, DateField, StringField, IntegerField, DecimalField, TextAreaField, PasswordField, validators, SelectField, EmailField, FileField
 import datetime
-from wtforms.widgets import Select, html_params
 
 class RequiredIf(validators.DataRequired):
     """Validator which makes a field required if another field is set and has a truthy value.
@@ -118,3 +117,12 @@ class Cat_form(Form):
     duration4 = IntegerField('Выдержка 4, мин', validators=[validators.Optional()])
     
     max_pressure = DecimalField('Максимальное рабочее давленее, МПа', validators=[validators.Optional()])
+    
+class Hardware_form(Form):
+    owner = SelectField('Компания владелец')
+    setup = SelectField('Установка')
+    # location = SelectField('Место дислокации')
+    tape_number = StringField('Номер бандажной ленты', validators=[validators.Optional(), validators.Length(max=150)])
+    serial_number = StringField('Серийный номер', validators=[validators.Optional(), validators.Length(max=150)])
+    commissioned = DateField('Дата ввода в эксплуатацию')
+    batch_number = StringField('Партийный номер', validators=[validators.Optional(), validators.Length(max=150)])
