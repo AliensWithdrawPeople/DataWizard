@@ -16,6 +16,7 @@ import base64
 import uuid
 import sys
 import datetime
+from multiprocessing.pool import ThreadPool
 
 gtk_path = pathlib.PurePath(os.environ['GTK'])
 if os.path.isdir(gtk_path) and not str(gtk_path) in sys.path: 
@@ -217,7 +218,9 @@ class Reporter:
         logo = cls.get_image(img.LOGO)
         stamp = cls.get_image(img.STAMP)
         outputs: list[tuple[templates, pathlib.PurePath]] = []
-        for template_name, filename, params in map(lambda _: dataclasses.astuple(_), config):
+        
+        def task(config_tuple):
+            template_name, filename, params = config_tuple
             template = env.get_template(template_name.value)
             html_file_path = pathlib.PurePath(cls.storage_dir, 'html', folder_name, f'report_{template_name.value}')
             with open(html_file_path, 'w') as html_file:
@@ -225,8 +228,12 @@ class Reporter:
         
             output_file_path = pathlib.PurePath(cls.storage_dir, 'pdf', folder_name, filename)
             HTML(str(html_file_path)).write_pdf(str(output_file_path))
-            outputs.append((template_name, output_file_path))
-
+            return (template_name, output_file_path)
+        
+        with ThreadPool() as pool:
+            for output in pool.imap(task, map(lambda _: dataclasses.astuple(_), config)):
+                outputs.append(output)
+            
         output_zip = None
         if zip_files:
             output_zip = pathlib.PurePath(cls.storage_dir, 'pdf', folder_name, f'{request_id}.zip')
