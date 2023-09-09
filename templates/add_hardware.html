@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% from "_formhelpers.html" import render_field %}
+<header class="fs-1 text-lg-center py-lg-3">
+    <b>{{add_or_edit}} в реестр(е)</b>
+</header>
+<hr>
+<form method=post enctype=multipart/form-data> 
+    <dl>
+        <div class="row align-self-start gap-4 mx-3">
+            <div class="col-md-auto">
+                {{ render_field(form.owner) }}
+            </div>
+            <div class="col-md-auto">
+                {{ render_field(form.setup) }}
+            </div>
+
+        </div>
+
+        <div class="row align-self-start gap-5 mx-3 my-lg-5">
+            <div class="col-md-auto">
+                {{ render_field(form.tape_number) }}
+            </div>
+            <div class="col-md-auto">
+                {{ render_field(form.serial_number) }}
+            </div>
+            <div class="col-md-auto">
+                {{ render_field(form.commissioned) }}
+            </div>
+            <div class="col-md-auto">
+                {{ render_field(form.batch_number) }}
+            </div>
+        </div>
+    </dl>
+
+    <hr>
+    <dl>
+        <!-- Type form -->
+        <form method=post enctype=multipart/form-data> 
+            <dl>
+                <div class="row align-self-start gap-4 mx-3">
+                    <div class="col-md-auto">
+                        {{ render_field(type_form.name) }}
+                    </div>
+
+                    <div class="col-md-auto">
+                        {{ render_field(type_form.comment) }}
+                    </div>
+
+                    <div class="col-md-auto">
+                        {{ render_field(type_form.manufacturer) }}
+                    </div>
+
+                    <div class="col-md-auto">
+                        {{ render_field(type_form.batch_number) }}
+                    </div>
+
+                    <div class="col-md-auto">
+                        {{ render_field(type_form.life_time) }}
+                    </div>
+                </div>
+                
+                <div class="row align-self-start gap-5 mx-3 my-lg-5">
+                    <div class="hstack col-sm-1 gap-3 align-content-start">
+                        {{ render_field(type_form.T1) }}
+                        {{ render_field(type_form.T2) }}
+                        {{ render_field(type_form.T3) }}
+                        {{ render_field(type_form.T4) }}
+                        {{ render_field(type_form.T5) }}
+                        {{ render_field(type_form.T6) }}
+                        {{ render_field(type_form.T7) }}
+                    </div>
+                </div>
+
+                <div class="row align-self-start gap-5 mx-3 my-lg-5">
+                    <div class="hstack col-nd-auto align-content-start">
+                        <div class="vstack col-md-auto gap-2">
+                            {{ render_field(type_form.stage1) }}
+                            {{ render_field(type_form.duration1) }}
+                        </div>
+                        
+                        <div class="vstack col-md-auto gap-2">
+                            {{ render_field(type_form.stage2) }}
+                            {{ render_field(type_form.duration2) }}
+                        </div>
+
+                        <div class="vstack col-md-auto gap-2">
+                            {{ render_field(type_form.stage3) }}
+                            {{ render_field(type_form.duration3) }}
+                        </div>
+
+                        <div class="vstack col-md-auto gap-2">
+                            {{ render_field(type_form.stage4) }}
+                            {{ render_field(type_form.duration4) }}
+                        </div>
+                    </div>
+                </div>
+            </dl>
+        </form>
+    </dl>
+    <div class="row flex-nowraw gap-3 mx-3">
+        <input type="hidden" id="fill_from_form" name="fill_from_form" value="true" />
+        <div class="col-md-auto align-self-center"> 
+            <input class="btn align-self-center bg-dark-subtle btn-outline-dark" type="submit" value="{{add_or_edit}}">
+        </div>
+    </div>
+</form>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('batch_number').addEventListener('change', function(e){
+        const type_info_url = {{ url_for(sidebar_urls["Reports.hardware.load_type_data_from_DB"], batch_number='') |tojson }} + e.target.value;
+        fetch(type_info_url)
+            .then(res => res.json())
+            .then((res) => {
+                const data = res.data;
+                Object.entries(res).forEach((entry) => {
+                    const [key, value] = entry;
+                    document.getElementById(key).value = value;
+                });
+            });
+    });
+</script>
+{% endblock %}

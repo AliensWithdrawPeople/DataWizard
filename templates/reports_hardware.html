@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid py-lg-3">
+
+    <div class="hstack gap-3 col-md-auto align-self-lg-start ">
+        <a class="btn btn-primary" href="{{ url_for(sidebar_urls['Reports.add_hardware'])}}">Добавить</a>
+        <button class=" btn btn-danger bg-danger" type="button" id="delete_elements_button" name="" onclick="delete_elements()">Удалить выбранные</button>
+    </div>
+
+    <div class="hstack gap-3 col-lg-4 align-self-start">
+        <div class="vstack gap-1 col-md-auto">
+            <div id="manufacturer_filter_val">Производитель</div>
+            <div class="btn-group">
+                <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" id="manufacturer_filter_button">Все</button>
+                <ul class="dropdown-menu">
+                    <li><button class="dropdown-item" type="button" id="show_manufacturer_none" onclick="set_manufacturer_filter_val('Все')">Все</button></li>
+                    {% for manufacturer_name in manufacturers %}
+                        <li><button class="dropdown-item" type="button" id="show_manufacturer_{{manufacturer_name}}" onclick="set_manufacturer_filter_val('{{manufacturer_name}}')">'{{manufacturer_name}}'</button></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <div class="vstack gap-1 col-md-auto">
+            <div id="owner_filter_val">Организация владелец</div>
+            <div class="btn-group">
+                <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" id="owner_filter_button">Все</button>
+                <ul class="dropdown-menu">
+                    <li><button class="dropdown-item" type="button" id="show_owner_none" onclick="set_owner_filter_val('Все')">Все</button></li>
+                    {% for owner in owners %}
+                        <li><button class="dropdown-item" type="button" id="show_owner_{{owner}}" onclick="set_owner_filter_val('{{owner}}')">'{{owner}}'</button></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <div class="vstack gap-1 col-md-auto">
+            <div id="setup_filter_val">Установка</div>
+            <div class="btn-group">
+                <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" id="setup_filter_button">Все</button>
+                <ul class="dropdown-menu">
+                    <li><button class="dropdown-item" type="button" id="show_setup_none" onclick="set_setup_filter_val('Все')">Все</button></li>
+                    {% for setup in setups %}
+                        <li><button class="dropdown-item" type="button" id="show_setup_{{setup}}" onclick="set_setup_filter_val('{{setup}}')">'{{setup}}'</button></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <div class="vstack gap-1 col-md-auto">
+            <div id="location_filter_val">Место дислокации</div>
+            <div class="btn-group">
+                <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" id="location_filter_button">Все</button>
+                <ul class="dropdown-menu">
+                    <li><button class="dropdown-item" type="button" id="show_location_none" onclick="set_location_filter_val('Все')">Все</button></li>
+                    {% for location in locations %}
+                        <li><button class="dropdown-item" type="button" id="show_location_{{location}}" onclick="set_location_filter_val('{{location}}')">'{{location}}'</button></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        tr.odd.selected td{
+            background-color: rgb(107, 159, 249) !important; /* Add !important to make sure override datables base styles */
+        }
+        tr.even.selected td{
+            background-color: rgb(107, 159, 249) !important; /* Add !important to make sure override datables base styles */
+        }
+    </style>
+    <table id="hard_table" class="table table-bordered table"  style="width:100%">
+        <thead>
+        <tr>
+            <th>id</th>
+            <th>Наименование</th>
+            <th>Хар-ки</th>
+            <th>Производитель</th> <!-- points to href with it -->
+            <th>Партийный №</th>
+            <th>Серийный №</th>
+            <th>Бандаж. №</th>
+            <th>Дата ввода в эксплуатацию</th>
+            <th>Владелец</th>
+            <th>Установка</th>
+            <th>Действия</th>
+        </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const selected = [];
+    let delete_list = [];
+    var table = $('#hard_table').DataTable({
+        retrieve: true,
+        serverSide: true,
+        ajax: {
+                url: '/api/data/reports/hardware',
+                rowId: 'id',
+                data: function ( d ) {
+                    return $.extend( {}, d, {
+                        "owner_filter": document.getElementById('owner_filter_button').innerText,
+                        "setup_filter": document.getElementById('setup_filter_button').innerText,
+                        "manufacturer_filter": document.getElementById('manufacturer_filter_button').innerText,
+                        "location_filter": document.getElementById('location_filter_button').innerText,
+                        "delete": get_delete_list()
+                    } );
+                },
+                "rowCallback": function( row, data ) {
+                    if ( $.inArray(data.DT_RowId, selected) !== -1 ) {
+                        $(row).addClass('selected');
+                }
+        }
+        },
+        columns: [
+            {data: 'id'},
+            {data: 'Наименование'},
+            {data: 'Хар-ки'},
+            {data: 'Производитель'},
+            {data: 'Партийный №'},
+            {data: 'Серийный №'},
+            {data: 'Бандаж. №'},
+            {data: 'Дата в.в.э.'},
+            {data: 'Владелец'},
+            {data: 'Установка'},
+            {
+                data: null,
+                render: function ( data, type, row, meta ) {
+                return  '<div class="d-grid gap-2">' +
+                            '<button type="button" class="btn btn-primary btn-sm" onclick="edit_element(' + row.id + ')">Изменить</button>' +
+                            '<button type="button" class="btn btn-primary btn-sm" onclick="add_report(' + row.id + ')"><i class="bi bi-file-earmark-plus"></i></button>' +
+                            '<button type="button" class="btn btn-primary btn-sm" onclick="delete_element(' + row.id + ')">Удалить</button>' +
+                        '</div>';
+                },
+            },
+        ],
+    });
+
+    function get_delete_list() {
+        return delete_list.join(',');
+    }
+
+    table.on('click', 'tbody tr', function () {
+        let id = this.childNodes[0].innerHTML;
+        let index = $.inArray(id, selected);
+        
+        if ( index === -1 ) {
+            selected.push( id );
+        } else {
+            selected.splice( index, 1 );
+        }
+        $(this).toggleClass('selected');
+    });
+
+    function delete_elements() {
+        if(selected.length != 0) {
+            if (confirm("Вы хотите удалить " + table.rows('.selected').data().length + ' элемент(ов). Вы уверены?')) {
+                delete_list = [...selected];
+                table.ajax.reload();
+                selected.length = 0;
+                delete_list = [];
+            } 
+        }
+    }
+
+    function delete_element(id) {
+        if (confirm('Вы хотите удалить элемент с id = ' + id + '. Вы уверены?')) {
+            delete_list = [id];
+            table.ajax.reload();
+            delete_list = [];
+        } 
+    }
+
+    function edit_element(id) {
+        window.location.href = {{ url_for(sidebar_urls["Reports.edit_hardware"], id=id)|tojson }} + id
+    }
+
+    function add_report(id) {
+        window.location.href = {{ url_for(sidebar_urls["Reports.add_report"], id=id)|tojson }} + id
+    }
+
+
+    function set_manufacturer_filter_val(val) {    
+        document.getElementById("manufacturer_filter_button").innerText = val;
+        table.ajax.reload();
+    }
+
+    function set_owner_filter_val(val) {    
+        document.getElementById("owner_filter_button").innerText = val;
+        table.ajax.reload();
+    }
+
+    function set_setup_filter_val(val) {    
+        document.getElementById("setup_filter_button").innerText = val;
+        table.ajax.reload();
+    }
+
+    function set_location_filter_val(val) {    
+        document.getElementById("location_filter_button").innerText = val;
+        table.ajax.reload();
+    }
+</script>
+{% endblock %}
