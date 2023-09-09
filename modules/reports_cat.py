@@ -1,5 +1,6 @@
 from flask import Blueprint, redirect, render_template, request, send_from_directory, url_for, session
 from flask_login import login_required, current_user
+from modules.Attachment.AttachmentHandler import AttachmentHandler
 from sqlalchemy import select 
 
 from .db_connecter import get_session
@@ -8,10 +9,12 @@ from . import Models
 from .aux_scripts.form_dict import form_cat_dict, form_json
 from .aux_scripts.Templates_params import sidebar_urls
 from .aux_scripts.forms import Cat_form
-from .aux_scripts.check_role import check_inspector
+from .aux_scripts.check_role import check_id, check_inspector
 
 catalogue = Blueprint('catalogue', __name__)
 
+attach_handler = AttachmentHandler.getInstance()
+    
 @catalogue.route("/reports/cat", methods=('GET', 'POST'))
 @login_required
 def cat():
@@ -27,16 +30,25 @@ def cat():
 @catalogue.route("/api/data/reports/cat")
 @login_required
 def cat_json():
-    return form_json(get_session(), Models.Catalogue, form_cat_dict, check_inspector)
+    def manufacturer_filter(selected, model, filter_val):
+        if not filter_val is None:
+            selected = selected.where(model.manufacturer == filter_val)
+        return selected
+    
+    def pressure_filter(selected, model, filter_val):
+        if not filter_val is None and filter_val.lower().strip() != 'все':
+            selected = selected.where(model.max_pressure.between(float(filter_val) - 1e-3,  float(filter_val) + 1e-3))
+        return selected
+    filters = { "manufacturer_filter": manufacturer_filter,
+                "pressure_filter": pressure_filter}
+    return form_json(get_session(), Models.Catalogue, form_cat_dict, check_inspector, filters)
 
 @catalogue.route("/reports/cat/add", methods=('GET', 'POST'))
 @catalogue.route("/reports/cat/edit/<id>", methods=('GET', 'POST'), endpoint='edit_cat')
 @login_required
 def add_cat(id=None):
     check_inspector()
-    if(not id is None and not id.isdigit()):
-            # Log that some faggot tried to mess with me by passing me shitty id!
-            return redirect(url_for(sidebar_urls['Reports.cat']))
+    check_id(id, 'Reports.cat')
         
     req_form = request.form
     form = Cat_form(req_form)
@@ -86,7 +98,6 @@ def add_cat(id=None):
         return render_template('add_cat.html', is_admin=is_admin, username=username, sidebar_urls=sidebar_urls, add_or_edit=add_or_edit, form=form)
         
     if request.method == 'POST' and form.validate():
-        # TODO: Handle images. 
         data = {
             'name'  : form.name.data,
             'comment'  : form.comment.data,
@@ -119,9 +130,28 @@ def add_cat(id=None):
         }
         if not id is None:
             obj = session_db.scalars(select(Models.Catalogue).where(Models.Catalogue.id == str(id))).one()
+            manufacturer_logo_id = attach_handler.load_img_from_form(form.manufacturer_logo_img, obj.manufacturer_logo_id)
+            sketch_VIC_id = attach_handler.load_img_from_form(form.sketch_VIC_img, obj.sketch_VIC_id)
+            sketch_UZT_id = attach_handler.load_img_from_form(form.sketch_UZT_img, obj.sketch_UZT_id)
+            sketch_UK_id = attach_handler.load_img_from_form(form.sketch_UK_img, obj.sketch_UK_id)
+            sketch_MK_id = attach_handler.load_img_from_form(form.sketch_MK_img, obj.sketch_MK_id)
+            sketch_diagram_id = attach_handler.load_img_from_form(form.sketch_diagram_img, obj.sketch_diagram_id)
             for key, val in data.items():
                 setattr(obj, key, val)
-        else:        
+        else:
+            manufacturer_logo_id = attach_handler.load_img_from_form(form.manufacturer_logo_img)
+            sketch_VIC_id = attach_handler.load_img_from_form(form.sketch_VIC_img)
+            sketch_UZT_id = attach_handler.load_img_from_form(form.sketch_UZT_img)
+            sketch_UK_id = attach_handler.load_img_from_form(form.sketch_UK_img)
+            sketch_MK_id = attach_handler.load_img_from_form(form.sketch_MK_img)
+            sketch_diagram_id = attach_handler.load_img_from_form(form.sketch_diagram_img)
+            
+            data['logo_id'] = manufacturer_logo_id if type(manufacturer_logo_id) is int else None
+            data['sketch_VIC_id'] = sketch_VIC_id if type(sketch_VIC_id) is int else None
+            data['sketch_UZT_id'] = sketch_UZT_id if type(sketch_UZT_id) is int else None
+            data['sketch_UK_id'] = sketch_UK_id if type(sketch_UK_id) is int else None
+            data['sketch_MK_id'] = sketch_MK_id if type(sketch_MK_id) is int else None
+            data['sketch_diagram_id'] = sketch_diagram_id if type(sketch_diagram_id) is int else None        
             obj = Models.Catalogue(**data) 
             session_db.add(obj)
             

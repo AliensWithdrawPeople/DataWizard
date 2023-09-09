@@ -69,7 +69,7 @@
     let delete_list = [];
     var table = $('#cat_table').DataTable({
         retrieve: true,
-        serverSide: true,
+        serverSide: false,
         ajax: {
                 url: '/api/data/reports/cat',
                 rowId: 'id',
