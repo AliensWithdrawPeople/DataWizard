@@ -1,15 +1,15 @@
-from flask import Blueprint, redirect, render_template, request, send_from_directory, url_for, session
+from flask import Blueprint, redirect, render_template, request, url_for
 from flask_login import login_required, current_user
 from modules.Attachment.AttachmentHandler import AttachmentHandler
 from sqlalchemy import select 
 
-from .db_connecter import get_session
-from . import Models
+from ..db_connecter import get_session
+from .. import Models
 
-from .aux_scripts.form_dict import form_cat_dict, form_json
-from .aux_scripts.Templates_params import sidebar_urls
-from .aux_scripts.forms import Cat_form
-from .aux_scripts.check_role import check_id, check_inspector
+from ..aux_scripts.form_dict import form_cat_dict, form_json
+from ..aux_scripts.Templates_params import sidebar_urls
+from ..aux_scripts.forms import Cat_form
+from ..aux_scripts.check_role import check_id, check_inspector
 
 catalogue = Blueprint('catalogue', __name__)
 

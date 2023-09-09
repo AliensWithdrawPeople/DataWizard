@@ -5,13 +5,13 @@ from modules.Attachment.AttachmentHandler import AttachmentHandler
 from sqlalchemy import select, or_
 from sqlalchemy.exc import NoResultFound, MultipleResultsFound
 
-from .db_connecter import get_session
-from . import Models
+from ..db_connecter import get_session
+from .. import Models
 
-from .aux_scripts.form_dict import form_server_side_json, form_hardware_dict
-from .aux_scripts.Templates_params import sidebar_urls
-from .aux_scripts.forms import Cat_form, Hardware_form, FileField
-from .aux_scripts.check_role import check_id
+from ..aux_scripts.form_dict import form_server_side_json, form_hardware_dict
+from ..aux_scripts.Templates_params import sidebar_urls
+from ..aux_scripts.forms import Cat_form, Hardware_form, FileField
+from ..aux_scripts.check_role import check_id
 
 hardware = Blueprint('hardware', __name__)
 
@@ -34,22 +34,22 @@ def hardware_list():
 def hardware_json():
     def owner_filter(selected, model, filter_val):
         if not filter_val is None and filter_val != 'Все':
-            selected = selected.where(model.unit.company.name == filter_val)
+            selected = selected.join_from(model, Models.Company).where(Models.Company.name == filter_val)
         return selected
     
     def setup_filter(selected, model, filter_val):
         if not filter_val is None and filter_val != 'Все':
-            selected = selected.where(model.unit.setup_name == filter_val)
+            selected = selected.join_from(model, Models.Unit).where(Models.Unit.setup_name == filter_val)
         return selected
     
     def manufacturer_filter(selected, model, filter_val):
         if not filter_val is None and filter_val != 'Все':
-            selected = selected.where(model.type.manufacturer == filter_val)
+            selected = selected.join_from(model, Models.Catalogue).where(Models.Catalogue.manufacturer == filter_val)
         return selected
     
     def location_filter(selected, model, filter_val):
         if not filter_val is None and filter_val != 'Все':
-            selected = selected.where(model.unit.location == filter_val)
+            selected = selected.join_from(model, Models.Unit).where(Models.Unit.location == filter_val)
         return selected
     
     filter_dict = {
