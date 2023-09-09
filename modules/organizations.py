@@ -163,13 +163,14 @@ def add_unit(id=None):
             obj = session_db.scalars(select(Models.Unit).where(Models.Unit.id == str(id))).one()
             for key, val in data.items():
                 setattr(obj, key, val)
+            session_db.commit()
             current_app.logger.info('Unit #%s was successfully edited.', obj.id, exc_info=True)    
         else:        
             obj = Models.Unit(**data) 
             session_db.add(obj)
+            session_db.commit()
             current_app.logger.info('Unit #%s was successfully added.', obj.id, exc_info=True)
             
-        session_db.commit()
         return redirect(url_for(sidebar_urls['Organizations']))
     
     return render_template('add_unit.html', is_admin=is_admin, username=username, sidebar_urls=sidebar_urls, add_or_edit=add_or_edit, form=form)    

@@ -1,5 +1,3 @@
-from flask import Flask, redirect, url_for
-
 sidebar_urls = {
     'Main' : "index",
     
@@ -26,8 +24,13 @@ sidebar_urls = {
     'Reports.add_cat' : "reports.catalogue.add_cat",
     'Reports.edit_cat' : "reports.catalogue.edit_cat",
     
-    'Reports.reestr' : "index",
+    'Reports.hardware' : "reports.hardware.hardware_list",
+    'Reports.edit_hardware' : "reports.hardware.edit_hardware",
+    'Reports.add_hardware' : "reports.hardware.add_hardware",
+    'Reports.hardware.load_type_data_from_DB' : "reports.hardware.get_hardware_type_info",
+    
     'Reports.reports' : "index",
+    'Reports.add_report' : "index",
     'Reports.report_total' : "index",
     
     # User info section

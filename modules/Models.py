@@ -47,7 +47,7 @@ class Unit(Base):
     supervisor_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id'))
     location: Mapped[VARCHAR] = mapped_column(VARCHAR(50))
     sector: Mapped[VARCHAR] = mapped_column(VARCHAR(50)) # Участок
-    setup_name: Mapped[VARCHAR] = mapped_column(VARCHAR(50)) # Номер установки
+    setup_name: Mapped[VARCHAR] = mapped_column(VARCHAR(50), unique=True) # Номер установки
     
     company: Mapped[Company] = relationship("Company", back_populates="units")
     supervisor: Mapped["User"] = relationship("User", back_populates="units")
@@ -75,7 +75,6 @@ class User(Base):
     
     def __repr__(self) -> str:
         return f"User(id={self.id!r}, name={self.name!r}, role={self.role!r})"
-        
 
 class Tool(Base):
     __tablename__ = 'tools'
@@ -103,7 +102,7 @@ class Catalogue(Base):
     
     manufacturer = mapped_column(VARCHAR(200))
     manufacturer_logo_id = mapped_column(Integer, ForeignKey('images.id'), nullable=True)
-    batch_number = mapped_column(VARCHAR(200))
+    batch_number = mapped_column(VARCHAR(200), unique=True)
     
     # In years
     life_time = mapped_column(Integer)
@@ -155,9 +154,6 @@ class Hardware(Base):
     serial_number = mapped_column(Text)
     # When it started to be used
     commissioned = mapped_column(Date)
-    
-    last_checkup = mapped_column(Date)
-    next_checkup = mapped_column(Date)
     
     type: Mapped[Catalogue] = relationship("Catalogue", back_populates="hardwares")
     unit: Mapped[Unit] = relationship("Unit", back_populates="hardwares")
