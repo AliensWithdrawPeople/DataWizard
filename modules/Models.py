@@ -184,7 +184,7 @@ class Report(Base):
     T6 = mapped_column(Float)
     T7 = mapped_column(Float)
     
-    uzt_result = mapped_column(Boolean)
+    UZT_good = mapped_column(Boolean)
     residual = mapped_column(Float)
     
     UK_good = mapped_column(Boolean)

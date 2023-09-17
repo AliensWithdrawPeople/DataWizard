@@ -6,8 +6,10 @@
     <div class="hstack gap-3 col-md-auto align-self-lg-start ">
         <a class="btn btn-primary" href="{{ url_for(sidebar_urls['Reports.add_hardware'])}}">Добавить</a>
         <button class=" btn btn-danger bg-danger" type="button" id="delete_elements_button" name="" onclick="delete_elements()">Удалить выбранные</button>
+        <button class=" btn btn-danger" type="button" id="create_reports_button" name="" onclick="create_reports()">Скачать отчёты для выбранных</button>
     </div>
 
+    <!-- filters -->
     <div class="hstack gap-3 col-lg-4 align-self-start">
         <div class="vstack gap-1 col-md-auto">
             <div id="manufacturer_filter_val">Производитель</div>
@@ -61,7 +63,7 @@
             </div>
         </div>
     </div>
-
+    
     <style>
         tr.odd.selected td{
             background-color: rgb(107, 159, 249) !important; /* Add !important to make sure override datables base styles */
@@ -165,6 +167,21 @@
                 selected.length = 0;
                 delete_list = [];
             } 
+        }
+    }
+
+    function create_reports() {
+        if(selected.length != 0) {
+            let reports_request = {
+                "name": "create_reports",
+                "hardware_ids": selected,
+            }
+
+            fetch({{ url_for(sidebar_urls['Reports.create_reports'])|tojson }}, {
+                "method": "POST",
+                "headers": {"Content-Type": "application/json"},
+                "body": JSON.stringify(reports_request),
+            })
         }
     }
 

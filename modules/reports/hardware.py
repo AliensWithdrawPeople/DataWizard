@@ -11,7 +11,7 @@ from .. import Models
 from ..aux_scripts.form_dict import form_server_side_json, form_hardware_dict
 from ..aux_scripts.Templates_params import sidebar_urls
 from ..aux_scripts.forms import Cat_form, Hardware_form, FileField
-from ..aux_scripts.check_role import check_id
+from ..aux_scripts.check_role import check_id, check_inspector
 
 hardware = Blueprint('hardware', __name__)
 
@@ -58,7 +58,6 @@ def hardware_json():
         'manufacturer_filter': manufacturer_filter,
         'location_filter': location_filter
     }
-    #TODO: Create an actual search where clause.
     search_clause = lambda search_val: or_(
         Models.Hardware.type.name.like(f'%{search_val}%'),
         Models.Hardware.type.comment.like(f'%{search_val}%'),
@@ -76,7 +75,8 @@ def hardware_json():
 @hardware.route("/reports/hardware/edit/<id>", methods=('GET', 'POST'), endpoint='edit_hardware')
 @login_required
 def add_hardware(id=None):
-    check_id(id, 'Lab.tools')
+    check_id(id, 'Reports.hardware')
+    check_inspector()
     req_form = request.form
     form = Hardware_form(req_form)
     type_form = Cat_form(req_form, prefix='type')
