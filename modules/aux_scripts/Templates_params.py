@@ -20,17 +20,20 @@ sidebar_urls = {
     'Organizations.edit_unit' : "organizations.edit_unit",
     
     # Reports section
-    'Reports.cat' : "reports.catalogue.cat",
-    'Reports.add_cat' : "reports.catalogue.add_cat",
-    'Reports.edit_cat' : "reports.catalogue.edit_cat",
+    'Reports.cat' : "base_report.catalogue.cat",
+    'Reports.add_cat' : "base_report.catalogue.add_cat",
+    'Reports.edit_cat' : "base_report.catalogue.edit_cat",
     
-    'Reports.hardware' : "reports.hardware.hardware_list",
-    'Reports.edit_hardware' : "reports.hardware.edit_hardware",
-    'Reports.add_hardware' : "reports.hardware.add_hardware",
-    'Reports.hardware.load_type_data_from_DB' : "reports.hardware.get_hardware_type_info",
+    'Reports.hardware' : "base_report.hardware.hardware_list",
+    'Reports.edit_hardware' : "base_report.hardware.edit_hardware",
+    'Reports.add_hardware' : "base_report.hardware.add_hardware",
+    'Reports.hardware.load_type_data_from_DB' : "base_report.hardware.get_hardware_type_info",
     
-    'Reports.reports' : "index",
+    'Reports.reports' : "base_report.reports.current_reports",
+    'Reports.create_reports' : "index",
     'Reports.add_report' : "index",
+    'Reports.edit_report' : "index",
+    
     'Reports.report_total' : "index",
     
     # User info section

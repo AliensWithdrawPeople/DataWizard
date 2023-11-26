@@ -93,7 +93,7 @@ class Report_Config:
     parameters: dict[str, str | None]
             
 # Main part
-def generate_config(report: Report)->list[Report_Config]:
+def generate_config(report: Report, with_facsimile: bool, with_stamp: bool)->list[Report_Config]:
     rep_types: list[report_type] = list(report.report_types)    # type: ignore
     session_db = get_session()
     params_base: dict[str, Any] = {  "report_number" : f"{report.id}-",
@@ -111,7 +111,8 @@ def generate_config(report: Report)->list[Report_Config]:
                     "executor_position" : report.inspector.position,
                     "identification" : report.inspector.certificate_number,
                     "executor_name" : get_name(report.inspector.name),
-                    "facsimile" : Reporter.get_image(session_db.scalars(select(Img.src).where(Img.id == report.inspector.facsimile_id)).one_or_none())
+                    "facsimile" : Reporter.get_image(session_db.scalars(select(Img.src).where(Img.id == report.inspector.facsimile_id)).one_or_none()) if with_facsimile else None, 
+                    "with_stamp" : with_stamp
                 }
     configs: list[Report_Config] = []
     for rep_type in rep_types:
@@ -148,13 +149,29 @@ class Reporter:
             Reporter.__instance = self
     
     @classmethod
-    def get(cls, report_id: str | int) -> pathlib.PurePath | None:
+    def get(cls, report_id: str | int, with_facsimile: bool, with_stamp: bool) -> pathlib.PurePath | None:
+        """Generate report with report_id
+
+        Parameters
+        ----------
+        report_id : str | int
+            id in Reports table in the DB.
+        with_facsimile: bool
+            Generate with or without facsimile.
+        with_stamp: bool
+            Generate with or without stamp.
+
+        Returns
+        -------
+        pathlib.PurePath | None
+            path to a zip with report.
+        """
         session_db = get_session()
         try:
             report = session_db.scalars(select(Report).where(Report.id == int(report_id))).one()
             try:
                 current_app.logger.info('Creating report #%s for user #%s.', report_id, current_user.id, exc_info=True) # type: ignore
-                config = generate_config(report)
+                config = generate_config(report, with_facsimile=with_facsimile, with_stamp=with_stamp)
                 _, res = cls.__create_report(current_user.id, config, True) # type: ignore
                 return res
             except FileNotFoundError as e:
@@ -163,8 +180,36 @@ class Reporter:
         except (NoResultFound, MultipleResultsFound) as e:
             current_app.logger.error('Report_id is wrong: %s', e, exc_info=True)
             return None 
-        
-        
+    
+    @classmethod
+    def get_many(cls, report_ids: list[str | int], with_facsimile: bool, with_stamp: bool) -> pathlib.PurePath:
+        """Generate reports for ids in report_ids.
+
+        Parameters
+        ----------
+        report_ids : list[str  |  int]
+            list of ids.
+        with_facsimile: bool
+            Generate with or without facsimile.
+        with_stamp: bool
+            Generate with or without stamp.
+
+        Returns
+        -------
+        pathlib.PurePath | None
+            path to a zip with reports.
+        """
+        reports_path = [cls.get(id, with_facsimile=with_facsimile, with_stamp=with_stamp) for id in report_ids]
+        cls.__mk_if_not_exist(pathlib.PurePath(cls.storage_dir, 'request'))
+        output_zip = pathlib.PurePath(cls.storage_dir, 'request', f'{uuid.uuid1()}.zip')
+        current_app.logger.info('Generated reports  and now will pack it to one zip file.')
+        with ZipFile(output_zip, 'w') as report_zip:
+            for rep_path in reports_path:
+                if rep_path is not None:
+                    report_zip.write(rep_path, arcname=rep_path.name) 
+        current_app.logger.info('Successfully packed reports zip to one zip file.')
+        return output_zip
+           
     @classmethod    
     def get_image(cls, image: img | str | os.PathLike | None) -> str | None:
         weatherford_logo = None
@@ -216,7 +261,7 @@ class Reporter:
         cls.__mk_if_not_exist(pdf_folder)
         
         logo = cls.get_image(img.LOGO)
-        stamp = cls.get_image(img.STAMP)
+        stamp = cls.get_image(img.STAMP) if config[0].parameters.get('with_stamp') is True else None
         outputs: list[tuple[templates, pathlib.PurePath]] = []
         
         def task(config_tuple):

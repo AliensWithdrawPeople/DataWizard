@@ -184,3 +184,28 @@ def form_hardware_dict(elem: Models.Hardware)->dict:
             'Установка' : elem.unit.setup_name
         }
     return res
+
+def format_report_field(elem: Models.Report)-> str:
+    def bool_to_human_readable(is_good: bool, opts: tuple[str, str]=('герметичный', 'негерметичный'))->str:
+        return 'годен' if is_good else 'негоден'
+        
+    is_good = {
+        'ВИК' : bool_to_human_readable(elem.visual_good) if elem.visual_good is not None else None,
+        'УЗТ' : bool_to_human_readable(elem.UZT_good) if elem.UZT_good is not None else None,
+        'МК' : bool_to_human_readable(elem.UK_good) if elem.UK_good is not None else None,
+        'МК' : bool_to_human_readable(elem.MK_good) if elem.MK_good is not None else None,
+        'ГИ' : bool_to_human_readable(elem.GI_preventor_good) if elem.GI_preventor_good is not None else None
+    } 
+    res = [f"{key} : {val}" for key, val in is_good.items() if val is not None]
+    return '\n'.join(res)
+    
+def form_report_dict(elem: Models.Report)->dict:
+    res = {
+        'id' : elem.id,
+        'Бандаж. №' : elem.hardware.tape_number,
+        'Наименование' :elem.hardware.type.name,
+        'Серийный №' : elem.hardware.serial_number,
+        'Дата проведения' : elem.checkup_date,
+        'Отчёт' : format_report_field(elem)
+    }
+    return res

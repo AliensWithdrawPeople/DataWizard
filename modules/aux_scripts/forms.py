@@ -1,4 +1,5 @@
-from wtforms import Form, DateField, StringField, IntegerField, DecimalField, TextAreaField, PasswordField, validators, SelectField, EmailField, FileField
+from sqlalchemy import Inspector
+from wtforms import Form, DateField, StringField, IntegerField, DecimalField, TextAreaField, PasswordField, validators, SelectField, EmailField, FileField, BooleanField
 import datetime
 
 class RequiredIf(validators.DataRequired):
@@ -9,7 +10,7 @@ class RequiredIf(validators.DataRequired):
         - http://stackoverflow.com/questions/8463209/how-to-make-a-field-conditionally-optional-in-wtforms
         - https://gist.github.com/devxoul/7638142#file-wtf_required_if-py
     """
-    field_flags = ('requiredif',)
+    field_flags = ('requiredif',) # type: ignore
 
     def __init__(self, other_field_name, message=None):
         super(RequiredIf).__init__()
@@ -121,8 +122,127 @@ class Cat_form(Form):
 class Hardware_form(Form):
     owner = SelectField('Компания владелец')
     setup = SelectField('Установка')
-    # location = SelectField('Место дислокации')
     tape_number = StringField('Номер бандажной ленты', validators=[validators.Optional(), validators.Length(max=150)])
     serial_number = StringField('Серийный номер', validators=[validators.Optional(), validators.Length(max=150)])
     commissioned = DateField('Дата ввода в эксплуатацию')
     batch_number = StringField('Партийный номер', validators=[validators.Optional(), validators.Length(max=150)])
+    
+def coerce_bool(x):
+    if isinstance(x, str):
+        return x == "True" if x != "None" else None
+    else:
+        return bool(x) if x is not None else None
+    
+class Main_Report_form(Form):
+    checkup_date = DateField('Дата контроля')
+    next_checkup_date = DateField('Дата следующего контроля')
+    inspector = SelectField('Инспектор')
+    ambient_temp = DecimalField('t окружающей среды, \u00B0C')
+    total_light = DecimalField('Общая освещённость')
+    surface_light = DecimalField('Освещённость объекта контроля')
+    tape_number = StringField('Номер бандажной ленты')
+
+    owner = StringField('Компания владелец', render_kw={'readonly': True})
+    setup = StringField('Установка', render_kw={'readonly': True})
+    location = StringField('Место дислокации', render_kw={'readonly': True})
+    serial_number = StringField('Серийный номер', render_kw={'readonly': True})
+    name = StringField('Наименование', render_kw={'readonly': True})
+    comment = StringField('Характеристики', render_kw={'readonly': True})
+    manufacturer = StringField('Производитель', render_kw={'readonly': True})
+    batch_number = StringField('Партийный номер', render_kw={'readonly': True})
+    life_time = IntegerField('Срок эксплуатации, лет', render_kw={'readonly': True})
+    commissioned = DateField('Дата ввода в эксплуатацию', render_kw={'readonly': True})
+
+    
+class VIC_Report_form(Form):
+    VIC = BooleanField('ВИК')
+    visual_good = SelectField('Пригодность', 
+                                choices=[(None, ""), (True, 'годен'), (False, 'негоден')], 
+                                coerce=coerce_bool, # type: ignore
+                                validators=[RequiredIf(other_field_name='VIC', message='Выберите значение')])
+    visual_comment = TextAreaField('Комментарий', validators=[validators.Length(max=300)], render_kw={'disabled':'disabled'})
+    vic_fields = visual_good, visual_comment
+
+class UZT_Report_form(Form):
+    UZT = BooleanField('УЗТ')
+    T1 = DecimalField('T1', validators=[RequiredIf(other_field_name='UZT', message='Выберите значение')], render_kw={'disabled':'disabled'})
+    T2 = DecimalField('T2', validators=[RequiredIf(other_field_name='UZT', message='Выберите значение')], render_kw={'disabled':'disabled'})
+    T3 = DecimalField('T3', validators=[RequiredIf(other_field_name='UZT', message='Выберите значение')], render_kw={'disabled':'disabled'})
+    T4 = DecimalField('T4', validators=[RequiredIf(other_field_name='UZT', message='Выберите значение')], render_kw={'disabled':'disabled'})
+    T5 = DecimalField('T5', validators=[RequiredIf(other_field_name='UZT', message='Выберите значение')], render_kw={'disabled':'disabled'})
+    T6 = DecimalField('T6', validators=[RequiredIf(other_field_name='UZT', message='Выберите значение')], render_kw={'disabled':'disabled'})
+    T7 = DecimalField('T7', validators=[RequiredIf(other_field_name='UZT', message='Выберите значение')], render_kw={'disabled':'disabled'})
+    
+    min_T1 = DecimalField('T1', render_kw={'readonly': True,'disabled':'disabled'})
+    min_T2 = DecimalField('T2', render_kw={'readonly': True,'disabled':'disabled'})
+    min_T3 = DecimalField('T3', render_kw={'readonly': True,'disabled':'disabled'})
+    min_T4 = DecimalField('T4', render_kw={'readonly': True,'disabled':'disabled'})
+    min_T5 = DecimalField('T5', render_kw={'readonly': True,'disabled':'disabled'})
+    min_T6 = DecimalField('T6', render_kw={'readonly': True,'disabled':'disabled'})
+    min_T7 = DecimalField('T7', render_kw={'readonly': True,'disabled':'disabled'})
+    UZT_good = SelectField('Пригодность', 
+                            choices=[(None, ""), (True, 'годен'), (False, 'негоден')], 
+                            coerce=coerce_bool, # type: ignore
+                            validators=[RequiredIf(other_field_name='UZT', message='Выберите значение')])
+    residual = DecimalField('Остаточный ресурс, мм', render_kw={'readonly': True, 'disabled':'disabled'})
+    uzt_fields = T1, T2, T3, T4, T5, T6, T7, UZT_good, residual
+
+class UK_Report_form(Form):    
+    UK = BooleanField('УК')
+    UK_good = SelectField('Пригодность', 
+                            choices=[(None, ""), (True, 'годен'), (False, 'негоден')], 
+                            coerce=coerce_bool, # type: ignore
+                            validators=[RequiredIf(other_field_name='UK', message='Выберите значение')], 
+                            render_kw={'disabled':'disabled'})
+    UK_comment = TextAreaField('Комментарий', validators=[validators.Length(max=300)], render_kw={'disabled':'disabled'})
+    uk_fields = UK_good, UK_comment
+
+class MK_Report_form(Form): 
+    MK = BooleanField('МК')
+    MK_good = SelectField('Пригодность', 
+                            choices=[(None, ""), (True, 'годен'), (False, 'негоден')], 
+                            coerce=coerce_bool, # type: ignore
+                            validators=[RequiredIf(other_field_name='MK', message='Выберите значение')], 
+                            render_kw={'disabled':'disabled'}) 
+    MK_comment = TextAreaField('Комментарий', validators=[validators.Length(max=300)], render_kw={'disabled':'disabled'})
+    mk_fields = MK_good, MK_comment
+
+class Hydro_Report_form(Form):  
+    Hydro = BooleanField('ГИ')
+    Hydro_good = SelectField('Пригодность', 
+                            choices=[(True, 'годен'), (False, 'негоден')], 
+                            coerce=coerce_bool, # type: ignore
+                            validators=[RequiredIf(other_field_name='Hydro', message='Выберите значение')], 
+                            render_kw={'disabled':'disabled'}) 
+    stage1 = DecimalField('Этап 1, МПа', render_kw={'disabled':'disabled'})
+    stage2 = DecimalField('Этап 2, МПа', render_kw={'disabled':'disabled'})
+    stage3 = DecimalField('Этап 3, МПа', render_kw={'disabled':'disabled'})
+    stage4 = DecimalField('Этап 4, МПа', render_kw={'disabled':'disabled'})
+    duration1 = IntegerField('Выдержка 1, мин', render_kw={'disabled':'disabled'})
+    duration2 = IntegerField('Выдержка 2, мин', render_kw={'disabled':'disabled'})
+    duration3 = IntegerField('Выдержка 3, мин', render_kw={'disabled':'disabled'})
+    duration4 = IntegerField('Выдержка 4, мин', render_kw={'disabled':'disabled'})
+    hydro_fields = Hydro_good, stage1, stage2, stage3, stage4, duration1, duration2, duration3, duration4
+
+class Hydro_preventer_Report_form(Form):
+    Hydro_preventer = BooleanField('ГИ превентора')
+    preventer_diameter = DecimalField('Диаметр плашек, мм', validators=[validators.NumberRange(min=0.0), RequiredIf(other_field_name='Hydro_preventer', message='Введите диаметр плашек')], render_kw={'disabled':'disabled'})
+    sketch_GI_body_img = FileField('Эскиз ГИ корпус', validators=[validators.Optional()], name = "sketch_GI_body_img", render_kw={'disabled':'disabled'})
+    sketch_GI_pipes_img = FileField('Эскиз ГИ трубные', validators=[validators.Optional()], name = "sketch_GI_pipes_img", render_kw={'disabled':'disabled'})
+    sketch_GI_vac_img = FileField('Эскиз ГИ глухие', validators=[validators.Optional()], name = "sketch_GI_vac_img", render_kw={'disabled':'disabled'})
+    hydro_preventer_fields = preventer_diameter, sketch_GI_body_img, sketch_GI_pipes_img, sketch_GI_vac_img
+
+class Calibration_Report_form(Form):
+    calibration = BooleanField('Тарировка')
+    calibration_pressure = DecimalField('Давление тарировки, МПа', validators=[RequiredIf(other_field_name='calibration', message='Введите значение'), validators.NumberRange(min=0.0)], render_kw={'disabled':'disabled'})
+    sketch_calibration_img = FileField('Эскиз диаграммы калибровки', validators=[validators.Optional()], name = "sketch_calibration_img", render_kw={'disabled':'disabled'})
+    calibration_fields = calibration_pressure, sketch_calibration_img
+
+class Tests_Report_form(Form):
+    multiple_tests = BooleanField('Кратные испытания')
+    double_test = BooleanField('2-x кратные', render_kw={'disabled':'disabled'})
+    one_and_a_half_test = BooleanField('1.5-x кратные', render_kw={'disabled':'disabled'})
+    one_and_a_fifth_test = BooleanField('1.2-x кратные', render_kw={'disabled':'disabled'})
+    sketch_multiple_tests_img = FileField('Эскиз диаграммы испытания', validators=[validators.Optional()], name = "sketch_multiple_tests_img", render_kw={'disabled':'disabled'})
+    multiple_tests_fields = double_test, one_and_a_half_test, one_and_a_fifth_test, sketch_multiple_tests_img
+    

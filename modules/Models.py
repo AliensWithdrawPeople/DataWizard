@@ -168,6 +168,7 @@ class Report(Base):
     
     report_types: Mapped[ARRAY] = mapped_column(ARRAY(report_type_postgres))
     checkup_date: Mapped[Date] = mapped_column(Date)
+    next_checkup_date: Mapped[Date] = mapped_column(Date)
     
     ambient_temp = mapped_column(Float)
     total_light = mapped_column(Float)
@@ -195,6 +196,12 @@ class Report(Base):
     
     hydro_result = mapped_column(Text)
     GI_preventor_good = mapped_column(Boolean)
+    preventer_diameter = mapped_column(Float)
+    
+    calibration_pressure = mapped_column(Float)
+    double_test = mapped_column(Boolean)
+    one_and_a_half_test = mapped_column(Boolean)
+    one_and_a_fifth_test = mapped_column(Boolean)
     
     GI_body_sketch_id = mapped_column(Integer, ForeignKey('images.id'), nullable=True)
     """ Эскиз ГИ корпус."""
