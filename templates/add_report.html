@@ -1,0 +1,256 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% from "_formhelpers.html" import render_field %}
+<header class="fs-1 text-lg-center py-lg-3">
+    <b>{{add_or_edit}} заключение</b>
+</header>
+<hr>
+<form method=post enctype=multipart/form-data> 
+    <dl>
+        <div class="row align-self-start gap-4 mx-3">
+            <div class="col-md-auto">
+                {{ render_field(form.checkup_date) }}
+            </div>
+            <div class="col-md-auto">
+                {{ render_field(form.next_checkup_date) }}
+            </div>
+            <div class="col-md-auto">
+                {{ render_field(form.inspector) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.ambient_temp) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.total_light) }}
+            </div>
+            
+            <div class="col-md-auto">
+                {{ render_field(form.surface_light) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.tape_number) }}
+            </div>
+        </div>
+        
+        <hr>
+
+        <div class="row align-self-start gap-4 mx-3">
+            <div class="col-md-auto">
+                {{ render_field(form.owner) }}
+            </div>
+            <div class="col-md-auto">
+                {{ render_field(form.setup) }}
+            </div>
+            <div class="col-md-auto">
+                {{ render_field(form.location) }}
+            </div>
+        </div>
+
+        <div class="row align-self-start gap-4 mx-3">
+            <div class="col-md-auto">
+                {{ render_field(form.serial_number) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.name) }}
+            </div>
+            
+            <div class="col-md-auto">
+                {{ render_field(form.comment) }}
+            </div>
+        </div>
+
+        <div class="row align-self-start gap-4 mx-3">
+            <div class="col-md-auto">
+                {{ render_field(form.manufacturer) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.batch_number) }}
+            </div>
+            
+            <div class="col-md-auto">
+                {{ render_field(form.life_time) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.commissioned) }}
+            </div>
+        </div>
+
+        <hr>
+<!-- VIC -->
+        <div class="row align-self-start gap-4 mx-3">
+            <div class="col-md-auto">
+                <!-- TODO: Add js func to show/hide fields on change -->
+                {{ render_field(form.VIC) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.visual_good) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.visual_comment) }}
+            </div>
+        </div>
+
+        <hr>
+<!-- UZT -->
+        <div class="row align-self-start gap-4 mx-3">
+            <div class="col-md-auto">
+                <!-- TODO: Add js func to show/hide fields on change -->
+                {{ render_field(form.UZT) }}
+            </div>
+        </div>
+        <!-- TODO: Add js func to load min_Ts -->
+        <div class="row align-self-start gap-4 mx-3">
+            <div class="col-md-auto">
+                {{ render_field(form.T1) }}
+                {{ render_field(form.min_T1) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.T2) }}
+                {{ render_field(form.min_T2) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.T3) }}
+                {{ render_field(form.min_T3) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.T4) }}
+                {{ render_field(form.min_T4) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.T5) }}
+                {{ render_field(form.min_T5) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.T6) }}
+                {{ render_field(form.min_T6) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.T7) }}
+                {{ render_field(form.min_T7) }}
+            </div>
+        </div>
+        <div class="row align-self-start gap-4 mx-3">
+            <div class="col-md-auto">
+                {{ render_field(form.UZT_good) }}
+            </div>
+
+            <div class="col-md-auto">
+                <!-- TODO: JS func to calculate it -->
+                {{ render_field(form.residual) }}
+            </div>
+        </div>
+
+        <hr>
+<!-- UK -->
+        <div class="row align-self-start gap-4 mx-3">
+            <div class="col-md-auto">
+                <!-- TODO: Add js func to show/hide fields on change -->
+                {{ render_field(form.UK) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.UK_good) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.UK_comment) }}
+            </div>
+        </div>
+
+        <hr>
+<!-- MK -->
+        <div class="row align-self-start gap-4 mx-3">
+            <div class="col-md-auto">
+                <!-- TODO: Add js func to show/hide fields on change -->
+                {{ render_field(form.MK) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.MK_good) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.MK_comment) }}
+            </div>
+        </div>
+
+        <hr>
+<!-- Hydro -->
+        <div class="row align-self-start gap-4 mx-3">
+            <div class="col-md-auto">
+                <!-- TODO: Add js func to show/hide fields on change -->
+                {{ render_field(form.Hydro) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.stage1) }}
+                {{ render_field(form.duration1) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.stage2) }}
+                {{ render_field(form.duration2) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.stage3) }}
+                {{ render_field(form.duration3) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.stage4) }}
+                {{ render_field(form.duration4) }}
+            </div>
+        </div>
+        <div class="row align-self-start gap-4 mx-3">
+            <div class="col-md-auto">
+                {{ render_field(form.Hydro_good) }}
+            </div>
+        </div>
+
+        <hr>
+<!-- TODO: Hydro_preventer -->
+<!-- TODO: Calibration -->
+<!-- TODO: Multiple_tests -->
+    </dl>
+    <div class="row flex-nowraw gap-3 mx-3">
+        <input type="hidden" id="fill_from_form" name="fill_from_form" value="true" />
+        <div class="col-md-auto align-self-center"> 
+            <input class="btn align-self-center bg-dark-subtle btn-outline-dark" type="submit" value="{{add_or_edit}}">
+        </div>
+    </div>
+</form>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('batch_number').addEventListener('change', function(e){
+        const type_info_url = {{ url_for(sidebar_urls["Reports.hardware.load_type_data_from_DB"], batch_number='') |tojson }} + e.target.value;
+        fetch(type_info_url)
+            .then(res => res.json())
+            .then((res) => {
+                const data = res.data;
+                Object.entries(res).forEach((entry) => {
+                    const [key, value] = entry;
+                    document.getElementById(key).value = value;
+                });
+            });
+    });
+</script>
+{% endblock %}

@@ -31,8 +31,8 @@ sidebar_urls = {
     
     'Reports.reports' : "base_report.reports.current_reports",
     'Reports.create_reports' : "index",
-    'Reports.add_report' : "index",
-    'Reports.edit_report' : "index",
+    'Reports.add_report' : "base_report.reports.add_report",
+    'Reports.edit_report' : "base_report.reports.edit_report",
     
     'Reports.report_total' : "index",
     

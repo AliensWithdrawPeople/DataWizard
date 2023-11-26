@@ -133,7 +133,7 @@ def coerce_bool(x):
     else:
         return bool(x) if x is not None else None
     
-class Main_Report_form(Form):
+class Report_form(Form):
     checkup_date = DateField('Дата контроля')
     next_checkup_date = DateField('Дата следующего контроля')
     inspector = SelectField('Инспектор')
@@ -154,7 +154,7 @@ class Main_Report_form(Form):
     commissioned = DateField('Дата ввода в эксплуатацию', render_kw={'readonly': True})
 
     
-class VIC_Report_form(Form):
+# class VIC_Report_form(Form):
     VIC = BooleanField('ВИК')
     visual_good = SelectField('Пригодность', 
                                 choices=[(None, ""), (True, 'годен'), (False, 'негоден')], 
@@ -163,7 +163,7 @@ class VIC_Report_form(Form):
     visual_comment = TextAreaField('Комментарий', validators=[validators.Length(max=300)], render_kw={'disabled':'disabled'})
     vic_fields = visual_good, visual_comment
 
-class UZT_Report_form(Form):
+# class UZT_Report_form(Form):
     UZT = BooleanField('УЗТ')
     T1 = DecimalField('T1', validators=[RequiredIf(other_field_name='UZT', message='Выберите значение')], render_kw={'disabled':'disabled'})
     T2 = DecimalField('T2', validators=[RequiredIf(other_field_name='UZT', message='Выберите значение')], render_kw={'disabled':'disabled'})
@@ -187,7 +187,7 @@ class UZT_Report_form(Form):
     residual = DecimalField('Остаточный ресурс, мм', render_kw={'readonly': True, 'disabled':'disabled'})
     uzt_fields = T1, T2, T3, T4, T5, T6, T7, UZT_good, residual
 
-class UK_Report_form(Form):    
+# class UK_Report_form(Form):    
     UK = BooleanField('УК')
     UK_good = SelectField('Пригодность', 
                             choices=[(None, ""), (True, 'годен'), (False, 'негоден')], 
@@ -196,8 +196,8 @@ class UK_Report_form(Form):
                             render_kw={'disabled':'disabled'})
     UK_comment = TextAreaField('Комментарий', validators=[validators.Length(max=300)], render_kw={'disabled':'disabled'})
     uk_fields = UK_good, UK_comment
-
-class MK_Report_form(Form): 
+    
+# class MK_Report_form(Form): 
     MK = BooleanField('МК')
     MK_good = SelectField('Пригодность', 
                             choices=[(None, ""), (True, 'годен'), (False, 'негоден')], 
@@ -207,7 +207,7 @@ class MK_Report_form(Form):
     MK_comment = TextAreaField('Комментарий', validators=[validators.Length(max=300)], render_kw={'disabled':'disabled'})
     mk_fields = MK_good, MK_comment
 
-class Hydro_Report_form(Form):  
+# class Hydro_Report_form(Form):  
     Hydro = BooleanField('ГИ')
     Hydro_good = SelectField('Пригодность', 
                             choices=[(True, 'годен'), (False, 'негоден')], 
@@ -224,7 +224,7 @@ class Hydro_Report_form(Form):
     duration4 = IntegerField('Выдержка 4, мин', render_kw={'disabled':'disabled'})
     hydro_fields = Hydro_good, stage1, stage2, stage3, stage4, duration1, duration2, duration3, duration4
 
-class Hydro_preventer_Report_form(Form):
+# class Hydro_preventer_Report_form(Form):
     Hydro_preventer = BooleanField('ГИ превентора')
     preventer_diameter = DecimalField('Диаметр плашек, мм', validators=[validators.NumberRange(min=0.0), RequiredIf(other_field_name='Hydro_preventer', message='Введите диаметр плашек')], render_kw={'disabled':'disabled'})
     sketch_GI_body_img = FileField('Эскиз ГИ корпус', validators=[validators.Optional()], name = "sketch_GI_body_img", render_kw={'disabled':'disabled'})
@@ -232,13 +232,13 @@ class Hydro_preventer_Report_form(Form):
     sketch_GI_vac_img = FileField('Эскиз ГИ глухие', validators=[validators.Optional()], name = "sketch_GI_vac_img", render_kw={'disabled':'disabled'})
     hydro_preventer_fields = preventer_diameter, sketch_GI_body_img, sketch_GI_pipes_img, sketch_GI_vac_img
 
-class Calibration_Report_form(Form):
+# class Calibration_Report_form(Form):
     calibration = BooleanField('Тарировка')
     calibration_pressure = DecimalField('Давление тарировки, МПа', validators=[RequiredIf(other_field_name='calibration', message='Введите значение'), validators.NumberRange(min=0.0)], render_kw={'disabled':'disabled'})
     sketch_calibration_img = FileField('Эскиз диаграммы калибровки', validators=[validators.Optional()], name = "sketch_calibration_img", render_kw={'disabled':'disabled'})
     calibration_fields = calibration_pressure, sketch_calibration_img
 
-class Tests_Report_form(Form):
+# class Tests_Report_form(Form):
     multiple_tests = BooleanField('Кратные испытания')
     double_test = BooleanField('2-x кратные', render_kw={'disabled':'disabled'})
     one_and_a_half_test = BooleanField('1.5-x кратные', render_kw={'disabled':'disabled'})

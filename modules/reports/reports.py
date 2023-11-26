@@ -12,7 +12,7 @@ from .. import Models
 
 from ..aux_scripts.form_dict import form_report_dict, form_server_side_json, form_hardware_dict
 from ..aux_scripts.Templates_params import sidebar_urls
-from ..aux_scripts.forms import Cat_form, Hardware_form, Main_Report_form, VIC_Report_form, UZT_Report_form, UK_Report_form, MK_Report_form, Hydro_Report_form, Hydro_preventer_Report_form, Calibration_Report_form, Tests_Report_form
+from ..aux_scripts.forms import Cat_form, Hardware_form, Report_form
 from ..aux_scripts.check_role import check_id, check_inspector
 from app import app
 
@@ -20,6 +20,7 @@ reports = Blueprint('reports', __name__)
 
 with app.app_context():
     reporter = Reporter.getInstance()
+    attach_handler = AttachmentHandler.getInstance()
 
 @reports.route('/reports/current', methods=('GET', 'POST'))
 @login_required
@@ -125,29 +126,8 @@ def add_report(id=None):
     check_inspector()
     req_form = request.form
     
-    main_form = Main_Report_form(req_form)
-    VIC_form = VIC_Report_form(req_form)
-    UZT_form = UZT_Report_form(req_form)
-    UK_form = UK_Report_form(req_form)
-    MK_form = MK_Report_form(req_form)
-    Hydro_form = Hydro_Report_form(req_form)
-    Hydro_preventer_form = Hydro_preventer_Report_form(req_form)
-    Calibration_form = Calibration_Report_form(req_form)
-    Tests_form = Tests_Report_form(req_form)
+    form = Report_form(req_form)
     
-    forms = {
-            'main_form' : main_form,
-            'VIC_form' : VIC_form,
-            'UZT_form' : UZT_form,
-            'UK_form' : UK_form,
-            'MK_form' : MK_form,
-            'Hydro_form' : Hydro_form,
-            'Hydro_preventer_form' : Hydro_preventer_form,
-            'Calibration_form' : Calibration_form,
-            'Tests_form' : Tests_form
-        }
-    
-    # session_db = get_session()
     fill_from_form = req_form.get('fill_from_form', type=lambda req: req.lower() == 'true')
     
     is_admin = current_user.get_role() == 'admin' # type: ignore
@@ -163,12 +143,12 @@ def add_report(id=None):
             return redirect(url_for(sidebar_urls['Reports.reports']))
         
         if not report_obj.checkup_date is None:
-            main_form.checkup_date.data = datetime.datetime.strptime(str(report_obj.checkup_date), "%Y-%m-%d").date()
-        main_form.inspector.data = report_obj.inspector.name
-        main_form.ambient_temp.data = report_obj.ambient_temp
-        main_form.total_light.data = report_obj.total_light
-        main_form.surface_light.data = report_obj.surface_light
-        main_form.tape_number.data = report_obj.hardware.tape_number
+            form.checkup_date.data = datetime.datetime.strptime(str(report_obj.checkup_date), "%Y-%m-%d").date()
+        form.inspector.data = report_obj.inspector.name
+        form.ambient_temp.data = report_obj.ambient_temp
+        form.total_light.data = report_obj.total_light
+        form.surface_light.data = report_obj.surface_light
+        form.tape_number.data = report_obj.hardware.tape_number
         
         
         def fill_fields(fields: tuple, obj):
@@ -176,105 +156,104 @@ def add_report(id=None):
                 if hasattr(obj, field.name) and type(field) is not FileField:
                     field = obj.__getattribute__(field.name)
                     
-        VIC_form.VIC.data = report_obj.visual_good is not None
+        form.VIC.data = report_obj.visual_good is not None
         if report_obj.visual_good is not None:
-            fill_fields(VIC_form.vic_fields, report_obj)
+            fill_fields(form.vic_fields, report_obj)
                
-        UZT_form.UZT.data = report_obj.UZT_good is not None 
+        form.UZT.data = report_obj.UZT_good is not None 
         if report_obj.T1 is not None:
-            fill_fields(UZT_form.uzt_fields, report_obj)
+            fill_fields(form.uzt_fields, report_obj)
                 
-        UK_form.UK.data = report_obj.UK_good is not None
+        form.UK.data = report_obj.UK_good is not None
         if report_obj.UK_good is not None:
-            fill_fields(UK_form.uk_fields, report_obj)        
+            fill_fields(form.uk_fields, report_obj)        
         
-        MK_form.MK.data = report_obj.MK_good is not None
+        form.MK.data = report_obj.MK_good is not None
         if report_obj.MK_good is not None:
-            fill_fields(MK_form.mk_fields, report_obj)    
+            fill_fields(form.mk_fields, report_obj)    
             
-        Hydro_form.Hydro.data = report_obj.hydro_result is not None
+        form.Hydro.data = report_obj.hydro_result is not None
         if report_obj.hydro_result is not None:
-            fill_fields(Hydro_form.hydro_fields, report_obj)    
+            fill_fields(form.hydro_fields, report_obj)    
             
-        Hydro_preventer_form.Hydro_preventer.data = report_obj.GI_preventor_good is not None
+        form.Hydro_preventer.data = report_obj.GI_preventor_good is not None
         if report_obj.hydro_result is not None:
-            fill_fields(Hydro_preventer_form.hydro_preventer_fields, report_obj)
+            fill_fields(form.hydro_preventer_fields, report_obj)
         
-        Calibration_form.calibration.data = report_obj.double_test is not None
+        form.calibration.data = report_obj.double_test is not None
         if report_obj.calibration_pressure is not None:
-            fill_fields(Calibration_form.calibration_fields, report_obj)
+            fill_fields(form.calibration_fields, report_obj)
             
-        Tests_form.multiple_tests.data = report_obj.double_test is not None
+        form.multiple_tests.data = report_obj.double_test is not None
         if report_obj.double_test is not None:
-            fill_fields(Tests_form.multiple_tests_fields, report_obj)
+            fill_fields(form.multiple_tests_fields, report_obj)
                  
         add_or_edit = 'Редактировать'
-        return render_template('add_report.html', is_admin=is_admin, username=username, sidebar_urls=sidebar_urls, add_or_edit=add_or_edit, form=forms)
+        return render_template('add_report.html', is_admin=is_admin, username=username, sidebar_urls=sidebar_urls, add_or_edit=add_or_edit, form=form)
     
-    
-    forms_validated = (main_form.validate() and VIC_form.validate() and UZT_form.validate() and UK_form.validate() and MK_form.validate() and 
-                       Hydro_form.validate() and Hydro_preventer_form.validate() and Calibration_form.validate() and Tests_form.validate())
-    
-    if request.method == 'POST' and forms_validated:
-        forms_list = VIC_form, UZT_form, UK_form, MK_form, Hydro_form, Hydro_preventer_form, Calibration_form, Tests_form
-        is_report = VIC_form.VIC, UZT_form.UZT, UK_form.UK, MK_form.MK, Hydro_form.Hydro, Hydro_preventer_form.Hydro_preventer, Calibration_form.calibration, Tests_form.multiple_tests
-        report_types = [(form, is_rep.label) for form, is_rep in list(zip(forms_list, is_report)) if is_rep.data]
+        
+    if request.method == 'POST' and form.validate():
+        is_report = form.VIC, form.UZT, form.UK, form.MK, form.Hydro, form.Hydro_preventer, form.calibration, form.multiple_tests
+        report_types = [rep_field.label for rep_field in is_report if rep_field.data]
         with get_session() as session:
-            hardware_id = session.scalars(select(Models.Hardware.id).where(Models.Hardware.tape_number == main_form.tape_number.data)).one_or_none()
+            hardware_id = session.scalars(select(Models.Hardware.id).where(Models.Hardware.tape_number == form.tape_number.data)).one_or_none()
             
         data = {
             'inspector_id': current_user.get_id(), # type: ignore
             'hardware_id': hardware_id,
-            'checkup_date' : main_form.checkup_date.data,
-            'ambient_temp' : main_form.ambient_temp.data,
-            'total_light' : main_form.total_light.data,
-            'surface_light' : main_form.surface_light.data,
-            'report_types' : [rep_type for _, rep_type in report_types]
+            'checkup_date' : form.checkup_date.data,
+            'ambient_temp' : form.ambient_temp.data,
+            'total_light' : form.total_light.data,
+            'surface_light' : form.surface_light.data,
+            'report_types' : list(report_types)
         }
         
         vic_data = {
-            'visual_good' : VIC_form.visual_good.data,
-            'visual_comment' : VIC_form.visual_comment.data
+            'visual_good' : form.visual_good.data,
+            'visual_comment' : form.visual_comment.data
         }
         
         UZT_data = {
-            'T1' : UZT_form.T1.data,
-            'T2' : UZT_form.T2.data,
-            'T3' : UZT_form.T3.data,
-            'T4' : UZT_form.T4.data,
-            'T5' : UZT_form.T5.data,
-            'T6' : UZT_form.T6.data,
-            'T7' : UZT_form.T7.data,
-            'UZT_good' : UZT_form.UZT_good.data,
-            'residual' : UZT_form.residual.data
+            'T1' : form.T1.data,
+            'T2' : form.T2.data,
+            'T3' : form.T3.data,
+            'T4' : form.T4.data,
+            'T5' : form.T5.data,
+            'T6' : form.T6.data,
+            'T7' : form.T7.data,
+            'UZT_good' : form.UZT_good.data,
+            'residual' : form.residual.data
         }
         UK_data = {
-            'UK_good' : UK_form.UK_good.data,
-            'UK_comment' : UK_form.UK_comment.data
+            'UK_good' : form.UK_good.data,
+            'UK_comment' : form.UK_comment.data
         }
         MK_data = {
-            'MK_good' : MK_form.MK_good.data,
-            'MK_comment' : MK_form.MK_comment.data
+            'MK_good' : form.MK_good.data,
+            'MK_comment' : form.MK_comment.data
         }
         Hydro_data = {
-            'hydro_result' : Hydro_form.Hydro_good.data,
+            'hydro_result' : form.Hydro_good.data,
         }
         Hydro_preventer_data = {
             # FIXME: GI_preventor_good != Hydro_preventer_form.Hydro_preventer
-            'GI_preventor_good' : Hydro_preventer_form.Hydro_preventer.data,
-            'preventer_diameter' : Hydro_preventer_form.preventer_diameter.data
+            'GI_preventor_good' : form.Hydro_preventer.data,
+            'preventer_diameter' : form.preventer_diameter.data
         }
         Calibration_data = {
-            'calibration_pressure' : Calibration_form.calibration_pressure.data
+            'calibration_pressure' : form.calibration_pressure.data
         }
         Tests_data = {
-            'double_test' : Tests_form.double_test.data,
-            'one_and_a_half_test' : Tests_form.one_and_a_half_test.data,
-            'one_and_a_fifth_test' : Tests_form.one_and_a_fifth_test.data,
+            'double_test' : form.double_test.data,
+            'one_and_a_half_test' : form.one_and_a_half_test.data,
+            'one_and_a_fifth_test' : form.one_and_a_fifth_test.data,
         }
-        # TODO: Load sketches!!!
         imgs_data = {
-            
+            'GI_body_sketch_id' : attach_handler.load_img_from_form(form.sketch_GI_body_img),
+            'GI_pipes_sketch_id' : attach_handler.load_img_from_form(form.sketch_GI_pipes_img),
+            'GI_gluhie_sketch_id' : attach_handler.load_img_from_form(form.sketch_GI_vac_img),
+            'calibration_diagram_sketch_id' : attach_handler.load_img_from_form(form.sketch_calibration_img),
+            'multiple_tests_diagram_sketch_id' : attach_handler.load_img_from_form(form.sketch_multiple_tests_img)
         }
         
         data.update(vic_data)
@@ -301,4 +280,4 @@ def add_report(id=None):
         session_db.commit()
         return redirect(url_for(sidebar_urls['Reports.reports']))
     
-    return render_template('add_report.html', is_admin=is_admin, username=username, sidebar_urls=sidebar_urls, add_or_edit=add_or_edit, form=forms)
+    return render_template('add_report.html', is_admin=is_admin, username=username, sidebar_urls=sidebar_urls, add_or_edit=add_or_edit, form=form)
