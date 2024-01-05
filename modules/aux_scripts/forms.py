@@ -142,16 +142,16 @@ class Report_form(Form):
     surface_light = DecimalField('Освещённость объекта контроля')
     tape_number = StringField('Номер бандажной ленты')
 
-    owner = StringField('Компания владелец', render_kw={'readonly': True})
-    setup = StringField('Установка', render_kw={'readonly': True})
-    location = StringField('Место дислокации', render_kw={'readonly': True})
-    serial_number = StringField('Серийный номер', render_kw={'readonly': True})
-    name = StringField('Наименование', render_kw={'readonly': True})
-    comment = StringField('Характеристики', render_kw={'readonly': True})
-    manufacturer = StringField('Производитель', render_kw={'readonly': True})
-    batch_number = StringField('Партийный номер', render_kw={'readonly': True})
-    life_time = IntegerField('Срок эксплуатации, лет', render_kw={'readonly': True})
-    commissioned = DateField('Дата ввода в эксплуатацию', render_kw={'readonly': True})
+    owner = StringField('Компания владелец', render_kw={'readonly': True, 'disabled':'disabled'})
+    setup = StringField('Установка', render_kw={'readonly': True, 'disabled':'disabled'})
+    location = StringField('Место дислокации', render_kw={'readonly': True, 'disabled':'disabled'})
+    serial_number = StringField('Серийный номер', render_kw={'readonly': True, 'disabled':'disabled'})
+    name = StringField('Наименование', render_kw={'readonly': True, 'disabled':'disabled'})
+    comment = StringField('Характеристики', render_kw={'readonly': True, 'disabled':'disabled'})
+    manufacturer = StringField('Производитель', render_kw={'readonly': True, 'disabled':'disabled'})
+    batch_number = StringField('Партийный номер', render_kw={'readonly': True, 'disabled':'disabled'})
+    life_time = IntegerField('Срок эксплуатации, лет', render_kw={'readonly': True, 'disabled':'disabled'})
+    commissioned = DateField('Дата ввода в эксплуатацию', render_kw={'readonly': True, 'disabled':'disabled'})
 
     
 # class VIC_Report_form(Form):
@@ -159,33 +159,37 @@ class Report_form(Form):
     visual_good = SelectField('Пригодность', 
                                 choices=[(None, ""), (True, 'годен'), (False, 'негоден')], 
                                 coerce=coerce_bool, # type: ignore
-                                validators=[RequiredIf(other_field_name='VIC', message='Выберите значение')])
-    visual_comment = TextAreaField('Комментарий', validators=[validators.Length(max=300)], render_kw={'disabled':'disabled'})
+                                validators=[RequiredIf(other_field_name='VIC', message='Выберите значение')],
+                                render_kw={'readonly':True, 'disabled':'disabled'})
+    visual_comment = TextAreaField('Комментарий', validators=[validators.Length(max=300)], render_kw={'readonly':True, 'disabled':'disabled'})
     vic_fields = visual_good, visual_comment
+    vic_fields_names = visual_good.name, visual_comment.name
 
 # class UZT_Report_form(Form):
     UZT = BooleanField('УЗТ')
-    T1 = DecimalField('T1', validators=[RequiredIf(other_field_name='UZT', message='Выберите значение')], render_kw={'disabled':'disabled'})
-    T2 = DecimalField('T2', validators=[RequiredIf(other_field_name='UZT', message='Выберите значение')], render_kw={'disabled':'disabled'})
-    T3 = DecimalField('T3', validators=[RequiredIf(other_field_name='UZT', message='Выберите значение')], render_kw={'disabled':'disabled'})
-    T4 = DecimalField('T4', validators=[RequiredIf(other_field_name='UZT', message='Выберите значение')], render_kw={'disabled':'disabled'})
-    T5 = DecimalField('T5', validators=[RequiredIf(other_field_name='UZT', message='Выберите значение')], render_kw={'disabled':'disabled'})
-    T6 = DecimalField('T6', validators=[RequiredIf(other_field_name='UZT', message='Выберите значение')], render_kw={'disabled':'disabled'})
-    T7 = DecimalField('T7', validators=[RequiredIf(other_field_name='UZT', message='Выберите значение')], render_kw={'disabled':'disabled'})
+    T1 = DecimalField('T1', validators=[RequiredIf(other_field_name='UZT', message='Выберите значение')], render_kw={'readonly':True, 'disabled':'disabled'})
+    T2 = DecimalField('T2', validators=[RequiredIf(other_field_name='UZT', message='Выберите значение')], render_kw={'readonly':True, 'disabled':'disabled'})
+    T3 = DecimalField('T3', validators=[RequiredIf(other_field_name='UZT', message='Выберите значение')], render_kw={'readonly':True, 'disabled':'disabled'})
+    T4 = DecimalField('T4', validators=[RequiredIf(other_field_name='UZT', message='Выберите значение')], render_kw={'readonly':True, 'disabled':'disabled'})
+    T5 = DecimalField('T5', validators=[RequiredIf(other_field_name='UZT', message='Выберите значение')], render_kw={'readonly':True, 'disabled':'disabled'})
+    T6 = DecimalField('T6', validators=[RequiredIf(other_field_name='UZT', message='Выберите значение')], render_kw={'readonly':True, 'disabled':'disabled'})
+    T7 = DecimalField('T7', validators=[RequiredIf(other_field_name='UZT', message='Выберите значение')], render_kw={'readonly':True, 'disabled':'disabled'})
     
-    min_T1 = DecimalField('T1', render_kw={'readonly': True,'disabled':'disabled'})
-    min_T2 = DecimalField('T2', render_kw={'readonly': True,'disabled':'disabled'})
-    min_T3 = DecimalField('T3', render_kw={'readonly': True,'disabled':'disabled'})
-    min_T4 = DecimalField('T4', render_kw={'readonly': True,'disabled':'disabled'})
-    min_T5 = DecimalField('T5', render_kw={'readonly': True,'disabled':'disabled'})
-    min_T6 = DecimalField('T6', render_kw={'readonly': True,'disabled':'disabled'})
-    min_T7 = DecimalField('T7', render_kw={'readonly': True,'disabled':'disabled'})
+    min_T1 = DecimalField('min T1', render_kw={'readonly': True, 'disabled':'disabled'})
+    min_T2 = DecimalField('min T2', render_kw={'readonly': True, 'disabled':'disabled'})
+    min_T3 = DecimalField('min T3', render_kw={'readonly': True, 'disabled':'disabled'})
+    min_T4 = DecimalField('min T4', render_kw={'readonly': True, 'disabled':'disabled'})
+    min_T5 = DecimalField('min T5', render_kw={'readonly': True, 'disabled':'disabled'})
+    min_T6 = DecimalField('min T6', render_kw={'readonly': True, 'disabled':'disabled'})
+    min_T7 = DecimalField('min T7', render_kw={'readonly': True, 'disabled':'disabled'})
     UZT_good = SelectField('Пригодность', 
                             choices=[(None, ""), (True, 'годен'), (False, 'негоден')], 
                             coerce=coerce_bool, # type: ignore
-                            validators=[RequiredIf(other_field_name='UZT', message='Выберите значение')])
-    residual = DecimalField('Остаточный ресурс, мм', render_kw={'readonly': True, 'disabled':'disabled'})
+                            validators=[RequiredIf(other_field_name='UZT', message='Выберите значение')],
+                            render_kw={'readonly':True, 'disabled':'disabled'})
+    residual = DecimalField('Остаточный ресурс, мм', render_kw={'readonly': True})
     uzt_fields = T1, T2, T3, T4, T5, T6, T7, UZT_good, residual
+    uzt_fields_names = T1.name, T2.name, T3.name, T4.name, T5.name, T6.name, T7.name, UZT_good.name, residual.name
 
 # class UK_Report_form(Form):    
     UK = BooleanField('УК')
@@ -193,9 +197,10 @@ class Report_form(Form):
                             choices=[(None, ""), (True, 'годен'), (False, 'негоден')], 
                             coerce=coerce_bool, # type: ignore
                             validators=[RequiredIf(other_field_name='UK', message='Выберите значение')], 
-                            render_kw={'disabled':'disabled'})
-    UK_comment = TextAreaField('Комментарий', validators=[validators.Length(max=300)], render_kw={'disabled':'disabled'})
+                            render_kw={'readonly':True, 'disabled':'disabled'})
+    UK_comment = TextAreaField('Комментарий', validators=[validators.Length(max=300)], render_kw={'readonly':True, 'disabled':'disabled'})
     uk_fields = UK_good, UK_comment
+    uk_fields_names = UK_good.name, UK_comment.name
     
 # class MK_Report_form(Form): 
     MK = BooleanField('МК')
@@ -203,9 +208,10 @@ class Report_form(Form):
                             choices=[(None, ""), (True, 'годен'), (False, 'негоден')], 
                             coerce=coerce_bool, # type: ignore
                             validators=[RequiredIf(other_field_name='MK', message='Выберите значение')], 
-                            render_kw={'disabled':'disabled'}) 
-    MK_comment = TextAreaField('Комментарий', validators=[validators.Length(max=300)], render_kw={'disabled':'disabled'})
+                            render_kw={'readonly':True, 'disabled':'disabled'}) 
+    MK_comment = TextAreaField('Комментарий', validators=[validators.Length(max=300)], render_kw={'readonly':True, 'disabled':'disabled'})
     mk_fields = MK_good, MK_comment
+    mk_fields_names = MK_good.name, MK_comment.name
 
 # class Hydro_Report_form(Form):  
     Hydro = BooleanField('ГИ')
@@ -213,36 +219,40 @@ class Report_form(Form):
                             choices=[(True, 'годен'), (False, 'негоден')], 
                             coerce=coerce_bool, # type: ignore
                             validators=[RequiredIf(other_field_name='Hydro', message='Выберите значение')], 
-                            render_kw={'disabled':'disabled'}) 
-    stage1 = DecimalField('Этап 1, МПа', render_kw={'disabled':'disabled'})
-    stage2 = DecimalField('Этап 2, МПа', render_kw={'disabled':'disabled'})
-    stage3 = DecimalField('Этап 3, МПа', render_kw={'disabled':'disabled'})
-    stage4 = DecimalField('Этап 4, МПа', render_kw={'disabled':'disabled'})
-    duration1 = IntegerField('Выдержка 1, мин', render_kw={'disabled':'disabled'})
-    duration2 = IntegerField('Выдержка 2, мин', render_kw={'disabled':'disabled'})
-    duration3 = IntegerField('Выдержка 3, мин', render_kw={'disabled':'disabled'})
-    duration4 = IntegerField('Выдержка 4, мин', render_kw={'disabled':'disabled'})
+                            render_kw={'readonly':True, 'disabled':'disabled'}) 
+    stage1 = DecimalField('Этап 1, МПа', render_kw={'readonly':True, 'disabled':'disabled'})
+    stage2 = DecimalField('Этап 2, МПа', render_kw={'readonly':True, 'disabled':'disabled'})
+    stage3 = DecimalField('Этап 3, МПа', render_kw={'readonly':True, 'disabled':'disabled'})
+    stage4 = DecimalField('Этап 4, МПа', render_kw={'readonly':True, 'disabled':'disabled'})
+    duration1 = IntegerField('Выдержка 1, мин', render_kw={'readonly':True, 'disabled':'disabled'})
+    duration2 = IntegerField('Выдержка 2, мин', render_kw={'readonly':True, 'disabled':'disabled'})
+    duration3 = IntegerField('Выдержка 3, мин', render_kw={'readonly':True, 'disabled':'disabled'})
+    duration4 = IntegerField('Выдержка 4, мин', render_kw={'readonly':True, 'disabled':'disabled'})
     hydro_fields = Hydro_good, stage1, stage2, stage3, stage4, duration1, duration2, duration3, duration4
+    hydro_fields_names = Hydro_good.name, stage1.name, stage2.name, stage3.name, stage4.name, duration1.name, duration2.name, duration3.name, duration4.name
 
 # class Hydro_preventer_Report_form(Form):
     Hydro_preventer = BooleanField('ГИ превентора')
     preventer_diameter = DecimalField('Диаметр плашек, мм', validators=[validators.NumberRange(min=0.0), RequiredIf(other_field_name='Hydro_preventer', message='Введите диаметр плашек')], render_kw={'disabled':'disabled'})
-    sketch_GI_body_img = FileField('Эскиз ГИ корпус', validators=[validators.Optional()], name = "sketch_GI_body_img", render_kw={'disabled':'disabled'})
-    sketch_GI_pipes_img = FileField('Эскиз ГИ трубные', validators=[validators.Optional()], name = "sketch_GI_pipes_img", render_kw={'disabled':'disabled'})
-    sketch_GI_vac_img = FileField('Эскиз ГИ глухие', validators=[validators.Optional()], name = "sketch_GI_vac_img", render_kw={'disabled':'disabled'})
+    sketch_GI_body_img = FileField('Эскиз ГИ корпус', validators=[validators.Optional()], name = "sketch_GI_body_img", render_kw={'readonly':True, 'disabled':'disabled'})
+    sketch_GI_pipes_img = FileField('Эскиз ГИ трубные', validators=[validators.Optional()], name = "sketch_GI_pipes_img", render_kw={'readonly':True, 'disabled':'disabled'})
+    sketch_GI_vac_img = FileField('Эскиз ГИ глухие', validators=[validators.Optional()], name = "sketch_GI_vac_img", render_kw={'readonly':True, 'disabled':'disabled'})
     hydro_preventer_fields = preventer_diameter, sketch_GI_body_img, sketch_GI_pipes_img, sketch_GI_vac_img
+    hydro_preventer_fields_names = preventer_diameter.name, sketch_GI_body_img.name, sketch_GI_pipes_img.name, sketch_GI_vac_img.name
 
 # class Calibration_Report_form(Form):
     calibration = BooleanField('Тарировка')
-    calibration_pressure = DecimalField('Давление тарировки, МПа', validators=[RequiredIf(other_field_name='calibration', message='Введите значение'), validators.NumberRange(min=0.0)], render_kw={'disabled':'disabled'})
-    sketch_calibration_img = FileField('Эскиз диаграммы калибровки', validators=[validators.Optional()], name = "sketch_calibration_img", render_kw={'disabled':'disabled'})
+    calibration_pressure = DecimalField('Давление тарировки, МПа', validators=[RequiredIf(other_field_name='calibration', message='Введите значение'), validators.NumberRange(min=0.0)], render_kw={'readonly':True, 'disabled':'disabled'})
+    sketch_calibration_img = FileField('Эскиз диаграммы калибровки', validators=[validators.Optional()], name = "sketch_calibration_img", render_kw={'readonly':True, 'disabled':'disabled'})
     calibration_fields = calibration_pressure, sketch_calibration_img
+    calibration_fields_names = calibration_pressure.name, sketch_calibration_img.name
 
 # class Tests_Report_form(Form):
     multiple_tests = BooleanField('Кратные испытания')
-    double_test = BooleanField('2-x кратные', render_kw={'disabled':'disabled'})
-    one_and_a_half_test = BooleanField('1.5-x кратные', render_kw={'disabled':'disabled'})
-    one_and_a_fifth_test = BooleanField('1.2-x кратные', render_kw={'disabled':'disabled'})
-    sketch_multiple_tests_img = FileField('Эскиз диаграммы испытания', validators=[validators.Optional()], name = "sketch_multiple_tests_img", render_kw={'disabled':'disabled'})
+    double_test = BooleanField('2-x кратные', render_kw={'readonly':True, 'disabled':'disabled'})
+    one_and_a_half_test = BooleanField('1.5-x кратные', render_kw={'readonly':True, 'disabled':'disabled'})
+    one_and_a_fifth_test = BooleanField('1.2-x кратные', render_kw={'readonly':True, 'disabled':'disabled'})
+    sketch_multiple_tests_img = FileField('Эскиз диаграммы испытания', validators=[validators.Optional()], name = "sketch_multiple_tests_img", render_kw={'readonly':True, 'disabled':'disabled'})
     multiple_tests_fields = double_test, one_and_a_half_test, one_and_a_fifth_test, sketch_multiple_tests_img
+    multiple_tests_fields_names = double_test.name, one_and_a_half_test.name, one_and_a_fifth_test.name, sketch_multiple_tests_img.name
     

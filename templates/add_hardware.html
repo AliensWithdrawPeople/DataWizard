@@ -6,7 +6,7 @@
     <b>{{add_or_edit}} в реестр(е)</b>
 </header>
 <hr>
-<form method=post enctype=multipart/form-data> 
+<form id="hardware_form" method=post enctype=multipart/form-data> 
     <dl>
         <div class="row align-self-start gap-4 mx-3">
             <div class="col-md-auto">
@@ -102,7 +102,7 @@
     <div class="row flex-nowraw gap-3 mx-3">
         <input type="hidden" id="fill_from_form" name="fill_from_form" value="true" />
         <div class="col-md-auto align-self-center"> 
-            <input class="btn align-self-center bg-dark-subtle btn-outline-dark" type="submit" value="{{add_or_edit}}">
+            <input class="btn align-self-center bg-dark-subtle btn-outline-dark" form="hardware_form" type="submit" value="{{add_or_edit}}">
         </div>
     </div>
 </form>
@@ -111,17 +111,43 @@
 
 {% block scripts %}
 <script>
-    document.getElementById('batch_number').addEventListener('change', function(e){
+    
+    // Check out the top answer here: https://stackoverflow.com/questions/56849253/efficient-way-to-request-back-end-for-data-on-input-change
+    // Returns a function, that, as long as it continues to be invoked, will not
+    // be triggered. The function will be called after it stops being called for
+    // N milliseconds. If `immediate` is passed, trigger the function on the
+    // leading edge, instead of the trailing.
+    function debounce(func, wait, immediate) {
+        var timeout;
+        return function() {
+            var context = this, args = arguments;
+            var later = function() {
+                timeout = null;
+                if (!immediate) func.apply(context, args);
+            };
+            var callNow = immediate && !timeout;
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+            if (callNow) func.apply(context, args);
+        };
+    };
+
+
+    document.getElementById('batch_number').addEventListener('change', debounce(function(e){
         const type_info_url = {{ url_for(sidebar_urls["Reports.hardware.load_type_data_from_DB"], batch_number='') |tojson }} + e.target.value;
         fetch(type_info_url)
             .then(res => res.json())
             .then((res) => {
                 const data = res.data;
-                Object.entries(res).forEach((entry) => {
-                    const [key, value] = entry;
-                    document.getElementById(key).value = value;
+                Object.entries(res).forEach(([key, value]) => {
+                    const element = document.getElementById(key);
+                    if(element) {
+                        element.value = value;
+                    } else {
+                        console.error(`Element with id ${key} and val ${value} not found.`);
+                    }
                 });
             });
-    });
+    }, 500));
 </script>
 {% endblock %}

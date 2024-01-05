@@ -82,7 +82,7 @@ def add_hardware(id=None):
     type_form = Cat_form(req_form, prefix='type')
     for fieldname, _ in type_form.data.items():
         field = type_form[fieldname]
-        field.render_kw = {'readonly': True}
+        field.render_kw = {'readonly': True, 'disabled' : True}
         if(type(field) is FileField):
             del field
 
@@ -117,8 +117,15 @@ def add_hardware(id=None):
             form.commissioned.data = datetime.datetime.strptime(str(hardware_obj.commissioned), "%Y-%m-%d").date()
         add_or_edit = 'Редактировать'
         return render_template('add_tool.html', is_admin=is_admin, username=username, sidebar_urls=sidebar_urls, add_or_edit=add_or_edit, form=form)
+    
+    try:
+        is_unique_batch_number = session_db.scalars(select(Models.Catalogue.id).where(Models.Catalogue.batch_number == form.batch_number.data)).one() is None
+    except (NoResultFound, MultipleResultsFound) as e:
+        current_app.logger.warn('Houston, we have a trouble with obtaining data from DB: %s', e, exc_info=True)
+        is_unique_batch_number = False
         
-    if request.method == 'POST' and form.validate() and not session_db.scalars(select(Models.Catalogue.id).where(Models.Catalogue.batch_number == form.batch_number.data)).one_or_none() is None:
+    if request.method == 'POST' and form.validate() and is_unique_batch_number:
+        current_app.logger.info('Hardware/tape_number = #%s', form.tape_number.data, exc_info=True)
         data = {
             'company_id': form.owner.data,
             'unit_id': session_db.scalars(select(Models.Unit.id).where(Models.Unit.setup_name == form.setup.data)).one_or_none(),
@@ -157,24 +164,24 @@ def get_hardware_type_info(batch_number=None):
         return {}
     current_app.logger.info('Hardware type info accessed; batch number = %s', str(batch_number), exc_info=True)
     res = {
-        'name': hardware_type.name,
-        'comment': hardware_type.comment,
-        'manufacturer': hardware_type.manufacturer,
-        'life_time': hardware_type.life_time,
-        'T1': hardware_type.T1,
-        'T2': hardware_type.T2,
-        'T3': hardware_type.T3,
-        'T4': hardware_type.T4,
-        'T5': hardware_type.T5,
-        'T6': hardware_type.T6,
-        'T7': hardware_type.T7,
-        'stage1': hardware_type.stage1,
-        'duration1': hardware_type.duration1,
-        'stage2': hardware_type.stage2,
-        'duration2': hardware_type.duration2,
-        'stage3': hardware_type.stage3,
-        'duration3': hardware_type.duration3,
-        'stage4': hardware_type.stage4,
-        'duration4': hardware_type.duration4
+        'type-name': hardware_type.name,
+        'type-comment': hardware_type.comment,
+        'type-manufacturer': hardware_type.manufacturer,
+        'type-life_time': hardware_type.life_time,
+        'type-T1': hardware_type.T1,
+        'type-T2': hardware_type.T2,
+        'type-T3': hardware_type.T3,
+        'type-T4': hardware_type.T4,
+        'type-T5': hardware_type.T5,
+        'type-T6': hardware_type.T6,
+        'type-T7': hardware_type.T7,
+        'type-stage1': hardware_type.stage1,
+        'type-duration1': hardware_type.duration1,
+        'type-stage2': hardware_type.stage2,
+        'type-duration2': hardware_type.duration2,
+        'type-stage3': hardware_type.stage3,
+        'type-duration3': hardware_type.duration3,
+        'type-stage4': hardware_type.stage4,
+        'type-duration4': hardware_type.duration4
     }
     return jsonify(res)

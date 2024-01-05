@@ -33,6 +33,7 @@ sidebar_urls = {
     'Reports.create_reports' : "index",
     'Reports.add_report' : "base_report.reports.add_report",
     'Reports.edit_report' : "base_report.reports.edit_report",
+    'Reports.load_hardware_data_from_DB' : "base_report.reports.get_hardware_info",
     
     'Reports.report_total' : "index",
     

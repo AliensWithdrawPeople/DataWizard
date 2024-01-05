@@ -178,8 +178,8 @@ def form_hardware_dict(elem: Models.Hardware)->dict:
             'Производитель' : elem.type.manufacturer,
             'Партийный №' : elem.type.batch_number,
             'Серийный №' : elem.serial_number,
-            'Бандаж. №' : elem.tape_number,
-            'Дата в.в.э.' : elem.commissioned,
+            'Бандаж №' : elem.tape_number,
+            'Дата ввэ' : elem.commissioned,
             'Владелец' : elem.unit.company.name,
             'Установка' : elem.unit.setup_name
         }

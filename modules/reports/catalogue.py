@@ -31,7 +31,7 @@ def cat():
 @login_required
 def cat_json():
     def manufacturer_filter(selected, model, filter_val):
-        if not filter_val is None:
+        if filter_val is not None and filter_val.lower().strip() != 'все':
             selected = selected.where(model.manufacturer == filter_val)
         return selected
     
@@ -146,7 +146,7 @@ def add_cat(id=None):
             sketch_MK_id = attach_handler.load_img_from_form(form.sketch_MK_img)
             sketch_diagram_id = attach_handler.load_img_from_form(form.sketch_diagram_img)
             
-            data['logo_id'] = manufacturer_logo_id if type(manufacturer_logo_id) is int else None
+            data['manufacturer_logo_id'] = manufacturer_logo_id if type(manufacturer_logo_id) is int else None
             data['sketch_VIC_id'] = sketch_VIC_id if type(sketch_VIC_id) is int else None
             data['sketch_UZT_id'] = sketch_UZT_id if type(sketch_UZT_id) is int else None
             data['sketch_UK_id'] = sketch_UK_id if type(sketch_UK_id) is int else None

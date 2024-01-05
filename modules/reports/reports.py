@@ -75,11 +75,12 @@ def reports_json():
         'checkup_date_filter': checkup_date_filter
     }
     # FIXME: Wrong search in parents.
-    search_clause = lambda search_val: or_(
-        Models.Report.checkup_date.like(f'%{search_val}%'),
-        Models.Report.hardware.tape_number.like(f'%{search_val}%')
-        )
-    json = form_server_side_json(get_session(), Models.Report, form_report_dict, lambda: True, search_clause, filter_dict)
+    search_clause = lambda search_val: None
+        # or_(
+        # Models.Report.checkup_date.like(f'%{search_val}%'),
+        # Models.Report.hardware.tape_number.like(f'%{search_val}%')
+        # )
+    json = form_server_side_json(get_session(), Models.Report, form_report_dict, lambda: True, None, filter_dict)
     return json
 
 @reports.route('/api/reporter/get', methods=('GET', 'POST'))
@@ -118,6 +119,46 @@ def send_reports():
     return send_file(res_zip, as_attachment=True)
 
 
+@reports.route('/api/reporter/get_hardware_info/<tape_number>', methods=('GET', 'POST'))
+@login_required
+def get_hardware_info(tape_number=None):
+    if tape_number is None:
+        return {}
+    with get_session() as session:
+        try:
+            hardware = session.execute(select(Models.Hardware).join_from(Models.Hardware, Models.Catalogue).join_from(Models.Hardware, Models.Unit).where(Models.Hardware.tape_number == tape_number)).one()
+            hardware = hardware.tuple()[-1]
+            
+            unit = session.execute(select(Models.Unit).where(Models.Unit.id == hardware.unit_id)).one()
+            unit = unit.tuple()[-1]
+            
+            hardware_type = session.execute(select(Models.Catalogue).where(Models.Catalogue.id == hardware.catalogue_id)).one()
+            hardware_type = hardware_type.tuple()[-1]
+            
+            owner = session.execute(select(Models.Company).where(Models.Company.id == hardware.company_id)).one().tuple()[-1]
+        except (MultipleResultsFound, NoResultFound) as e:
+            return {}
+    keys = ['owner', 'setup', 'location', 'serial_number', 'name', 'comment', 'manufacturer', 'batch_number', 'life_time', 'commissioned']
+    keys += [f'min_T{i}' for i in range(1, 8)] + [f'stage{i}' for i in range(1, 5)] + [f'duration{i}' for i in range(1, 5)]
+    hard_info = dict.fromkeys(keys, None)
+    
+    hard_info['owner'] = owner.name
+    hard_info['setup'] = unit.setup_name
+    hard_info['location'] = unit.location
+    hard_info['serial_number'] = hardware.serial_number
+    hard_info['name'] = hardware_type.name
+    hard_info['comment'] = hardware_type.comment
+    hard_info['manufacturer'] = hardware_type.manufacturer
+    hard_info['batch_number'] = hardware_type.batch_number
+    hard_info['life_time'] = hardware_type.life_time
+    hard_info['commissioned'] = hardware.commissioned
+    for i in range(1, 8):
+        hard_info[f'min_T{i}'] =  hardware_type.__getattribute__(f'T{i}')
+    for i in range(1, 5):
+        hard_info[f'stage{i}'] = hardware_type.__getattribute__(f'stage{i}')
+        hard_info[f'duration{i}'] = hardware_type.__getattribute__(f'duration{i}')
+    return hard_info
+
 @reports.route("/reports/reporter/add", methods=('GET', 'POST'))
 @reports.route("/reports/reporter/edit/<id>", methods=('GET', 'POST'), endpoint='edit_report')
 @login_required
@@ -127,7 +168,10 @@ def add_report(id=None):
     req_form = request.form
     
     form = Report_form(req_form)
-    
+    with get_session() as session:
+        inspectors = list(session.execute(select(Models.User.id, Models.User.name).where(Models.User.role.in_(('admin', 'inspector')))).all())
+    inspectors = [tuple(_) for _ in inspectors]
+    form.inspector.choices = inspectors
     fill_from_form = req_form.get('fill_from_form', type=lambda req: req.lower() == 'true')
     
     is_admin = current_user.get_role() == 'admin' # type: ignore
