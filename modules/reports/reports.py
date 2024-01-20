@@ -99,19 +99,24 @@ def send_reports():
         current_app.logger.info('Weirdo(user id = %s) passed shitty json! Both hardware_ids and report_ids are None', current_user.id, exc_info=True) # type: ignore
         return {}
     
-    # TODO: Check debug print and delete it.
-    print("reports/send_reports.py: with_facsimile =", with_facsimile, flush=True)
-    print("reports/send_reports.py: with_stamp =", with_stamp, flush=True)
     with_facsimile = True if with_facsimile is None else bool(with_facsimile)
     with_stamp = True if with_stamp is None else bool(with_stamp)
-    if report_ids is None:
-        session_db = get_session()
-        report_ids = session_db.execute(select(Models.Report.hardware_id, Models.Report.id, Models.Report.checkup_date)
-                                        .join_from(Models.Hardware, Models.Report)
-                                        .where(Models.Hardware.id.in_(hardware_ids)
-                                        .order_by(Models.Report.checkup_date.asc()))
-                                        ).all()
+    with get_session() as session_db:
+        if report_ids is None:
+            report_ids = session_db.scalars(select(Models.Report)
+                                            .where(Models.Report.hardware_id.in_(hardware_ids))
+                                            .order_by(Models.Report.checkup_date.asc())
+                                            ).all()
+        else:
+            report_ids = session_db.scalars(select(Models.Report)
+                                            .where(Models.Report.id.in_(report_ids))
+                                            .order_by(Models.Report.checkup_date.asc())
+                                            ).all()
+        
+        report_ids = [(x.hardware_id, x.id) for x in report_ids]
+
     reports = {}
+    print('report_ids =', report_ids)
     for hardware_id, report_id in report_ids:
         reports[hardware_id] = report_id
     report_ids = [report_id for _, report_id in reports.items()]
@@ -235,17 +240,30 @@ def add_report(id=None):
         add_or_edit = 'Редактировать'
         return render_template('add_report.html', is_admin=is_admin, username=username, sidebar_urls=sidebar_urls, add_or_edit=add_or_edit, form=form)
     
-        
+    print("form.validate() =", form.validate(), 'request.method =', request.method)     
     if request.method == 'POST' and form.validate():
         is_report = form.VIC, form.UZT, form.UK, form.MK, form.Hydro, form.Hydro_preventer, form.calibration, form.multiple_tests
-        report_types = [rep_field.label for rep_field in is_report if rep_field.data]
+        report_types_raw = [rep_field.name for rep_field in is_report if rep_field.data]
+        report_types = []
+        for rep in report_types_raw:
+            match rep:
+                case 'VIC':
+                    report_types.append('VCM')
+                case 'UZT':            
+                    report_types.append('UTM')
+                case 'MK':            
+                    report_types.append('MPI')
+                case 'Hydro':            
+                    report_types.append('HT')
+
         with get_session() as session:
             hardware_id = session.scalars(select(Models.Hardware.id).where(Models.Hardware.tape_number == form.tape_number.data)).one_or_none()
-            
+        print('report_types=', report_types)
         data = {
             'inspector_id': current_user.get_id(), # type: ignore
             'hardware_id': hardware_id,
             'checkup_date' : form.checkup_date.data,
+            'next_checkup_date' : form.next_checkup_date.data,
             'ambient_temp' : form.ambient_temp.data,
             'total_light' : form.total_light.data,
             'surface_light' : form.surface_light.data,
@@ -320,8 +338,7 @@ def add_report(id=None):
                 report = Models.Report(**data) 
                 session_db.add(report)
                 current_app.logger.info('Report #%s was successfully added.', report.id, exc_info=True)
-            
-        session_db.commit()
+            session_db.commit()
         return redirect(url_for(sidebar_urls['Reports.reports']))
     
     return render_template('add_report.html', is_admin=is_admin, username=username, sidebar_urls=sidebar_urls, add_or_edit=add_or_edit, form=form)

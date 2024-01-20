@@ -139,7 +139,7 @@
         },
         columns: [
             {data: 'id'},
-            {data: 'Бандаж. №'},
+            {data: 'Бандаж №'},
             {data: 'Наименование'},
             {data: 'Серийный №'},
             {data: 'Дата проведения'},
@@ -211,6 +211,16 @@
                 "headers": {"Content-Type": "application/json"},
                 "body": JSON.stringify(reports_request),
             })
+                .then((res) => res.blob())
+                .then((res) => {
+                const aElement = document.createElement("a");
+                aElement.setAttribute("download", 'report');
+                const href = URL.createObjectURL(res);
+                aElement.href = href;
+                aElement.setAttribute("target", "_blank");
+                aElement.click();
+                URL.revokeObjectURL(href);
+                });
         }
     }
 

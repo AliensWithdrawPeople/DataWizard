@@ -30,7 +30,7 @@ sidebar_urls = {
     'Reports.hardware.load_type_data_from_DB' : "base_report.hardware.get_hardware_type_info",
     
     'Reports.reports' : "base_report.reports.current_reports",
-    'Reports.create_reports' : "index",
+    'Reports.create_reports' : "base_report.reports.send_reports",
     'Reports.add_report' : "base_report.reports.add_report",
     'Reports.edit_report' : "base_report.reports.edit_report",
     'Reports.load_hardware_data_from_DB' : "base_report.reports.get_hardware_info",

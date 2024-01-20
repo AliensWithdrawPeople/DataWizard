@@ -15,7 +15,7 @@ role_python_enum = Enum('role_python_enum', ['admin', 'inspector', 'client'])
 method_enum = ENUM('ВИК', 'УЗТ', 'УК', 'МК', 'ПВК', 'ГИ', name='method_enum')
 method_python_enum = Enum('method_python_enum', ['ВИК', 'УЗТ', 'УК', 'МК', 'ПВК', 'ГИ'])
 
-report_type_postgres = ENUM('VCM', 'UTM', 'MPI', 'HT', name='report_type_postgres')
+report_type_postgres = ENUM('VCM', 'UTM', 'MPI', 'HT', name='report_type_postgres', create_type=False)
 
 class report_type(Enum):
     VCM = 'VCM'
@@ -166,7 +166,7 @@ class Report(Base):
     hardware_id = mapped_column(Integer, ForeignKey('hardware.id'))
     inspector_id = mapped_column(Integer, ForeignKey('users.id'))
     
-    report_types: Mapped[ARRAY] = mapped_column(ARRAY(report_type_postgres))
+    report_types: Mapped[ARRAY] = mapped_column(ARRAY(Text))
     checkup_date: Mapped[Date] = mapped_column(Date)
     next_checkup_date: Mapped[Date] = mapped_column(Date)
     

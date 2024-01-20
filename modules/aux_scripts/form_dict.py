@@ -202,7 +202,7 @@ def format_report_field(elem: Models.Report)-> str:
 def form_report_dict(elem: Models.Report)->dict:
     res = {
         'id' : elem.id,
-        'Бандаж. №' : elem.hardware.tape_number,
+        'Бандаж №' : elem.hardware.tape_number,
         'Наименование' :elem.hardware.type.name,
         'Серийный №' : elem.hardware.serial_number,
         'Дата проведения' : elem.checkup_date,

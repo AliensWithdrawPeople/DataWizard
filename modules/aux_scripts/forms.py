@@ -22,7 +22,7 @@ class RequiredIf(validators.DataRequired):
         other_field = form[self.other_field_name]
         if other_field is None:
             raise Exception('no field named "%s" in form' % self.other_field_name)
-        if bool(other_field.data) and len(other_field.data.strip()) != 0 and not field.data:
+        if bool(other_field.data) and len(str(other_field.data).strip()) != 0 and not field.data:
             validators.DataRequired.__call__(self, form, field)
         validators.Optional()(form, field)
 
@@ -136,7 +136,7 @@ def coerce_bool(x):
 class Report_form(Form):
     checkup_date = DateField('Дата контроля')
     next_checkup_date = DateField('Дата следующего контроля')
-    inspector = SelectField('Инспектор')
+    inspector = SelectField('Инспектор', validators=[validators.Optional()])
     ambient_temp = DecimalField('t окружающей среды, \u00B0C')
     total_light = DecimalField('Общая освещённость')
     surface_light = DecimalField('Освещённость объекта контроля')
@@ -187,7 +187,7 @@ class Report_form(Form):
                             coerce=coerce_bool, # type: ignore
                             validators=[RequiredIf(other_field_name='UZT', message='Выберите значение')],
                             render_kw={'readonly':True, 'disabled':'disabled'})
-    residual = DecimalField('Остаточный ресурс, мм', render_kw={'readonly': True})
+    residual = DecimalField('Остаточный ресурс, мм', validators=[RequiredIf(other_field_name='UZT', message='Выберите значение')], render_kw={'readonly': True})
     uzt_fields = T1, T2, T3, T4, T5, T6, T7, UZT_good, residual
     uzt_fields_names = T1.name, T2.name, T3.name, T4.name, T5.name, T6.name, T7.name, UZT_good.name, residual.name
 
