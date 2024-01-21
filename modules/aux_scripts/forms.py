@@ -1,4 +1,3 @@
-from sqlalchemy import Inspector
 from wtforms import Form, DateField, StringField, IntegerField, DecimalField, TextAreaField, PasswordField, validators, SelectField, EmailField, FileField, BooleanField
 import datetime
 
@@ -216,7 +215,7 @@ class Report_form(Form):
 # class Hydro_Report_form(Form):  
     Hydro = BooleanField('ГИ')
     Hydro_good = SelectField('Пригодность', 
-                            choices=[(True, 'годен'), (False, 'негоден')], 
+                            choices=[(None, ""), (True, 'годен'), (False, 'негоден')], 
                             coerce=coerce_bool, # type: ignore
                             validators=[RequiredIf(other_field_name='Hydro', message='Выберите значение')], 
                             render_kw={'readonly':True, 'disabled':'disabled'}) 

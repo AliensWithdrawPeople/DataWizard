@@ -1,18 +1,18 @@
 import datetime
-from flask import Blueprint, current_app, jsonify, redirect, render_template, request, send_file, send_from_directory, url_for
+from flask import Blueprint, current_app, redirect, render_template, request, send_file, url_for
 from flask_login import login_required, current_user
 from modules.Attachment.AttachmentHandler import AttachmentHandler
 from modules.ReportForge.reporter import Reporter
-from sqlalchemy import select, or_, update
+from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound, MultipleResultsFound
 from wtforms import FileField
 
 from ..db_connecter import get_session
 from .. import Models
 
-from ..aux_scripts.form_dict import form_report_dict, form_server_side_json, form_hardware_dict
+from ..aux_scripts.form_dict import form_report_dict, form_server_side_json
 from ..aux_scripts.Templates_params import sidebar_urls
-from ..aux_scripts.forms import Cat_form, Hardware_form, Report_form
+from ..aux_scripts.forms import Report_form
 from ..aux_scripts.check_role import check_id, check_inspector
 from app import app
 
@@ -298,8 +298,7 @@ def add_report(id=None):
             'hydro_result' : form.Hydro_good.data,
         }
         Hydro_preventer_data = {
-            # FIXME: GI_preventor_good != Hydro_preventer_form.Hydro_preventer
-            'GI_preventor_good' : form.Hydro_preventer.data,
+            'GI_preventor_good' : form.Hydro_preventer.data if form.Hydro_preventer.data else None,
             'preventer_diameter' : form.preventer_diameter.data
         }
         Calibration_data = {

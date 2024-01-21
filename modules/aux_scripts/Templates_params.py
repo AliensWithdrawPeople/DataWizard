@@ -5,7 +5,7 @@ sidebar_urls = {
     'Lab.tools' : "lab.show_Lab_tools",
     'Lab.add_tool' : "lab.add_tool",
     'Lab.edit_tool' : "lab.edit_tool",
-    
+    # TODO: Add Lab.templates page
     'Lab.templates' : "index",
     
     'Lab.users' : "lab.show_Lab_users",
@@ -34,7 +34,7 @@ sidebar_urls = {
     'Reports.add_report' : "base_report.reports.add_report",
     'Reports.edit_report' : "base_report.reports.edit_report",
     'Reports.load_hardware_data_from_DB' : "base_report.reports.get_hardware_info",
-    
+    # TODO: Add Reports.report_total page
     'Reports.report_total' : "index",
     
     # User info section
