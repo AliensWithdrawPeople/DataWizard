@@ -1,5 +1,8 @@
 from logging.config import dictConfig
 import pathlib
+import os
+from dotenv import load_dotenv
+
 
 dictConfig({
     'version': 1,
@@ -13,9 +16,10 @@ dictConfig({
             'formatter': 'default'
         },
         'custom_handler': {
-            'class' : 'logging.FileHandler',
+            'class' : 'logging.handlers.RotatingFileHandler',
             'formatter': 'default',
-            'filename' : 'DataWizard.log'
+            'filename' : 'DataWizard.log',
+            'backupCount': 30
             # 'level'    : 'WARN'
         }
     },
@@ -24,11 +28,27 @@ dictConfig({
         'handlers': ['wsgi', 'custom_handler']
     }
 })
+            
+dotenv_path = pathlib.Path('production.env')
+if not load_dotenv(dotenv_path=dotenv_path):
+    raise FileNotFoundError("Can't find the environment file (production.env) or file is empty.")
 
-#FIXME: Change me before release version.
-secret_key = b'35ec60f765926299d8b67586b9f435d4ef92c6398a0d2d2061b0b9e7bbbaf840'
 
-#FIXME: Change me when you will deploy it somewhere else.
-warehouse_path = pathlib.PurePath('C:/Windows', '/work', 'MagicWarehouse')
+secret_key_val = os.getenv('FLASK_APP_SECRET_KEY')
+if secret_key_val is None:
+    raise FileNotFoundError("There is no FLASK_APP_SECRET_KEY in the environment file.")
+secret_key = bytes(secret_key_val, "utf-8")
+
+warehouse_path = os.getenv('WAREHOUSE_PATH')
+if warehouse_path is None:
+    raise FileNotFoundError("There is no WAREHOUSE_PATH in the environment file.")
+warehouse_path = pathlib.PurePath(warehouse_path)
+            
 attachment_upload_folder = pathlib.PurePath(warehouse_path, 'uploads')
 reports_folder = pathlib.PurePath(warehouse_path, 'reports')
+
+def __local_config_mk_if_not_exist(path: os.PathLike):
+        if not os.path.isdir(path):
+            os.mkdir(path)
+__local_config_mk_if_not_exist(attachment_upload_folder)
+__local_config_mk_if_not_exist(reports_folder)
