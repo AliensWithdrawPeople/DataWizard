@@ -99,11 +99,11 @@ def add_cat(id=None):
         
     if request.method == 'POST' and form.validate():
         data = {
-            'name'  : form.name.data,
-            'comment'  : form.comment.data,
-            'manufacturer' : form.manufacturer.data,
+            'name'  : form.name.data.strip(),
+            'comment'  : form.comment.data.strip(),
+            'manufacturer' : form.manufacturer.data.strip(),
             
-            'batch_number' : form.batch_number.data,
+            'batch_number' : form.batch_number.data.strip(),
             'life_time' : form.life_time.data,
             'temp_min' : form.temp_min.data,
             'temp_max' : form.temp_max.data,
@@ -151,7 +151,10 @@ def add_cat(id=None):
             data['sketch_UZT_id'] = sketch_UZT_id if type(sketch_UZT_id) is int else None
             data['sketch_UK_id'] = sketch_UK_id if type(sketch_UK_id) is int else None
             data['sketch_MK_id'] = sketch_MK_id if type(sketch_MK_id) is int else None
-            data['sketch_diagram_id'] = sketch_diagram_id if type(sketch_diagram_id) is int else None        
+            data['sketch_diagram_id'] = sketch_diagram_id if type(sketch_diagram_id) is int else None   
+            for key, val in data.items():
+                if type(val) is str:
+                    val = val.strip()     
             obj = Models.Catalogue(**data) 
             session_db.add(obj)
             

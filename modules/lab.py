@@ -65,19 +65,23 @@ def add_user():
     if request.method == 'POST' and form.validate():
         certificate_img_id = attach_handler.load_img_from_form(form.certificate_img)
         facsimile_id = attach_handler.load_img_from_form(form.facsimile_img)
-        user = Models.User(
-            password = pbkdf2_sha256.hash(form.password.data),
-            name = form.username.data,
-            role = form.role.data, 
-            phone_number = form.phone_number.data,
-            email = form.email.data,
-            birthdate = form.birthdate.data,
-            position = form.position.data,
-            certificate_number = form.certificate_number.data,
-            certificated_till = form.certificated_till.data,
-            certificate_scan_id = certificate_img_id,
-            facsimile_id = facsimile_id
-        ) 
+        data = {
+            "password" : pbkdf2_sha256.hash(form.password.data),
+            "name" : form.username.data,
+            "role" : form.role.data, 
+            "phone_number" : form.phone_number.data,
+            "email" : form.email.data,
+            "birthdate" : form.birthdate.data,
+            "position" : form.position.data,
+            "certificate_number" : form.certificate_number.data,
+            "certificated_till" : form.certificated_till.data,
+            "certificate_scan_id" : certificate_img_id,
+            "facsimile_id" : facsimile_id
+        } 
+        for _, val in data.items():
+            if type(val) is str:
+                val = val.strip()
+        user = Models.User(**data)
         session_db = get_session()
         session_db.add(user)
         session_db.flush()
@@ -102,7 +106,7 @@ def edit_user(id):
     
     session_db = get_session()
     user_obj = session_db.scalars(select(Models.User).where(Models.User.id == edit_id)).one_or_none()
-    session_db.connection().close()
+    
     if(user_obj is None):
         raise RuntimeError('edit_user: user_obj is none')
         
@@ -120,6 +124,7 @@ def edit_user(id):
         form.position.data = user_obj.position
         form.certificate_number.data = user_obj.certificate_number
         form.certificated_till.data = user_obj.certificated_till
+        session_db.connection().close()
         return render_template('edit_user.html', is_admin=True, username=user_obj.name, sidebar_urls=sidebar_urls, form=form)
     
     if request.method == 'POST' and form.validate():
@@ -133,10 +138,11 @@ def edit_user(id):
         user_obj.birthdate = form.birthdate.data
         user_obj.position = form.position.data
         user_obj.certificate_number = form.certificate_number.data
-        user_obj.certificated_till = form.certificated_till.data       
-
-        session_db.commit()
+        user_obj.certificated_till = form.certificated_till.data      
+         
         current_app.logger.info('User #%s was successfully edited.', user_obj.id, exc_info=True)
+        session_db.commit()
+        session_db.connection().close()
         return redirect(url_for(sidebar_urls['Lab.users']))
             
     username = current_user.get_name() # type: ignore
@@ -225,6 +231,9 @@ def add_tool(id=None):
             'next_checkup' : form.next_checkup.data,
             'is_active' : True if form.is_active.data == 'Активный' else False
         }
+        for _, val in tool_data.items():
+            if type(val) is str:
+                val = val.strip()
         session_db = get_session()
         if not id is None:
             tool = session_db.scalars(select(Models.Tool).where(Models.Tool.id == str(id))).one()

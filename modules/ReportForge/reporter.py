@@ -18,9 +18,10 @@ import datetime
 from multiprocessing.pool import ThreadPool
 import numpy as np
 
-gtk_path = pathlib.PurePath(os.environ['GTK'])
-if os.path.isdir(gtk_path) and not str(gtk_path) in sys.path: 
-    sys.path.append(str(gtk_path))
+if 'GTK' in os.environ.keys():
+    gtk_path = pathlib.PurePath(os.environ['GTK'])
+    if os.path.isdir(gtk_path) and not str(gtk_path) in sys.path: 
+        sys.path.append(str(gtk_path))
 from weasyprint import HTML
 
 from ..db_connecter import get_session
@@ -43,7 +44,7 @@ def get_type_specific_params(report: Report, rep_type: report_type)->dict[str, A
     res = {}
     session_db = get_session()
     raw_tools = list(session_db.scalars(select(Tool).where(and_(Tool.method == report_type[str(rep_type)].value, Tool.is_active == True))).all())
-    tools = [f"{tool.name} {tool.model} {tool.factory_number} от {tool.next_checkup.strftime('%m.%d.%Y')} г." for tool in raw_tools] # type: ignore
+    tools = [f"{tool.name} {tool.model} {tool.factory_number} от {tool.prev_checkup.strftime('%m.%d.%Y')} г." for tool in raw_tools] # type: ignore
     match str(rep_type):
         case report_type.VCM.name:
             res = { "tools" : tools}
@@ -70,40 +71,7 @@ def get_type_specific_params(report: Report, rep_type: report_type)->dict[str, A
                     # FIXME: Which GI_*_sketch to print?
                     "sketch" : Reporter.get_image(session_db.scalars(select(Img.src).where(Img.id == report.GI_body_sketch_id)).one_or_none()),
                 }
-    
-    
-    # match str(rep_type):
-    #     case report_type.VCM.name:
-    #         res = { "tools" : ["Лупа измерительная ЛИ-3-10 No230236", 'Линейка измерительная "Калиброн" No3158 от 18.04.23 г.', 'Штангенциркуль "Калиброн" 0-150 No102201991 от 18.04.23 г.', 
-    #                         'Набор шаблонов  "Etalon" No 1 No2021491 от 18.04.23 г.', 'Набор шаблонов  "Etalon" No 3 No20201487 от 18.04.23 г.', 
-    #                         'Шаблон универсальный сварщика УШС–3 No0783 от 18.04.23  г.', 'Магнитометр переносной ИМАГ-400Ц No2598 от 15.01.23 г.',]
-    #             }
             
-    #     case report_type.UTM.name:
-    #         res = { "tools" : ["Толщиномер УТ-11 ЛУЧ  №0518 от 20.03.23 г.", "Преобразователь ПЭП П112-5-10/2-Т-003 №5404 от 19.03.23 г.", "Номинальная частота контроля: 5 МГц; СОП №7448."],
-    #                 "ts" : list(np.round([report.T1, report.T2, report.T3, report.T4, report.T5, report.T6, report.T7], 2)),
-    #                 "minimal_ts" : [report.hardware.type.T1, report.hardware.type.T2, report.hardware.type.T3, report.hardware.type.T4, report.hardware.type.T5, report.hardware.type.T6, report.hardware.type.T7],
-    #                 "sketch" : Reporter.get_image(session_db.scalars(select(Img.src).where(Img.id == report.hardware.type.sketch_UZT_id)).one_or_none())
-    #             }
-            
-    #     case report_type.MPI.name:
-    #         res = { "tools" : ["Магнит постоянный ПМ-30 №0036", "Лампа УФ UV-Inspector 150 №20249", "СОП для МК №А40 (Условный уровень чувствительности А);", 
-    #                            "Магнитометр переносной ИМАГ-400Ц №2598 от 15.01.23 г.", 'Штангенциркуль "Калиброн" 0-150 №102201991 от 18.04.23 г.', 
-    #                            'Магнитный индикатор: люминесцентный магнитный концентрат для мокрого способа контроля 14А;', 'носитель на масляной основе Carrier II.'],
-    #                 "sketch" : Reporter.get_image(session_db.scalars(select(Img.src).where(Img.id == report.hardware.type.sketch_MK_id)).one_or_none()),
-    #                 "is_good" : report.MK_good,
-    #                 "defects_position" : report.MK_comment,
-    #                 "defects_description" : report.MK_comment
-    #             }
-    #     case report_type.HT.name:
-    #         res = { "tools" : ['Гидравлическая станция: Пневмогидростанция НС-7 зав.№:1553', 'Манометр высокого давления: Manotherm 316L NiFe S/N:191651768', 
-    #                            'Дублирующий манометр высокого давления: Manotherm 316L NiFe S/N:191651767'],
-    #                 # FIXME:Is it true?
-    #                "actual_max_pressure" : round(report.hardware.type.max_pressure, 2),
-    #                "is_good" : report.GI_preventor_good,
-    #                 # FIXME: Which GI_*_sketch to print?
-    #                 "sketch" : Reporter.get_image(session_db.scalars(select(Img.src).where(Img.id == report.GI_body_sketch_id)).one_or_none()),
-    #             }
     session_db.connection().close()
     return res
 

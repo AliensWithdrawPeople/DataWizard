@@ -143,7 +143,10 @@ def add_hardware(id=None):
             'serial_number': form.serial_number.data,
             'commissioned': form.commissioned.data
         }
-        
+        for key, val in data.items():
+            if type(val) is str:
+                val = val.strip()
+                
         if not id is None:
             hardware = session_db.scalars(select(Models.Hardware).where(Models.Hardware.id == str(id))).one()           
             for key, val in data.items():
@@ -165,13 +168,14 @@ def get_hardware_type_info(batch_number=None):
     if batch_number is None:
         return {}
     session_db = get_session()
+    current_app.logger.info('Trying to access hardware type info; batch number = %s', str(batch_number))
     selected = select(Models.Catalogue).where(Models.Catalogue.batch_number == str(batch_number))
     try:
         hardware_type = session_db.scalars(selected).one()
     except (NoResultFound, MultipleResultsFound) as e:
         current_app.logger.warn('Houston, we have a trouble with obtaining data from DB: %s', e, exc_info=True)
         return {}
-    current_app.logger.info('Hardware type info accessed; batch number = %s', str(batch_number), exc_info=True)
+    current_app.logger.info('Hardware type info accessed; batch number = %s', str(batch_number))
     res = {
         'type-batch_number' : hardware_type.batch_number,
         'type-name': hardware_type.name,

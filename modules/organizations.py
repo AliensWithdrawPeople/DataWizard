@@ -73,6 +73,10 @@ def add_company(id=None):
         
     if request.method == 'POST' and form.validate():
         data = {'name'  : form.name.data}
+        for _, val in data.items():
+            if type(val) is str:
+                val = val.strip()
+                
         session_db = get_session()         
         if not id is None:
             obj = session_db.scalars(select(Models.Company).where(Models.Company.id == str(id))).one()
@@ -172,6 +176,10 @@ def add_unit(id=None):
             'sector' : form.sector.data,
             'setup_name' : form.setup_name.data,
         }
+        for _, val in data.items():
+            if type(val) is str:
+                val = val.strip()
+                
         if not id is None:
             obj = session_db.scalars(select(Models.Unit).where(Models.Unit.id == str(id))).one()
             for key, val in data.items():
