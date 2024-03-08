@@ -116,7 +116,6 @@ def send_reports():
         report_ids = [(x.hardware_id, x.id) for x in report_ids]
 
     reports = {}
-    print('report_ids =', report_ids)
     for hardware_id, report_id in report_ids:
         reports[hardware_id] = report_id
     report_ids = [report_id for _, report_id in reports.items()]
@@ -131,7 +130,7 @@ def get_hardware_info(tape_number=None):
         return {}
     with get_session() as session:
         try:
-            hardware = session.execute(select(Models.Hardware).join_from(Models.Hardware, Models.Catalogue).join_from(Models.Hardware, Models.Unit).where(Models.Hardware.tape_number == tape_number)).one()
+            hardware = session.execute(select(Models.Hardware).join_from(Models.Hardware, Models.Catalogue).join_from(Models.Hardware, Models.Unit).where(Models.Hardware.tape_number == str(tape_number).strip())).one()
             hardware = hardware.tuple()[-1]
             
             unit = session.execute(select(Models.Unit).where(Models.Unit.id == hardware.unit_id)).one()
@@ -142,6 +141,7 @@ def get_hardware_info(tape_number=None):
             
             owner = session.execute(select(Models.Company).where(Models.Company.id == hardware.company_id)).one().tuple()[-1]
         except (MultipleResultsFound, NoResultFound) as e:
+            current_app.logger.info('Cant find info on tape_number = #%s.', tape_number, exc_info=True)
             return {}
     keys = ['owner', 'setup', 'location', 'serial_number', 'name', 'comment', 'manufacturer', 'batch_number', 'life_time', 'commissioned']
     keys += [f'min_T{i}' for i in range(1, 8)] + [f'stage{i}' for i in range(1, 5)] + [f'duration{i}' for i in range(1, 5)]
@@ -326,6 +326,9 @@ def add_report(id=None):
         data.update(Calibration_data)
         data.update(Tests_data)
         data.update(imgs_data)
+        for key, val in data.items():
+                if type(val) is str:
+                    val = val.strip()
         
         with get_session() as session_db:
             if not id is None:
