@@ -1,0 +1,423 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% from "_formhelpers.html" import render_field %}
+<header class="fs-1 text-lg-center py-lg-3">
+    <b>{{add_or_edit}} заключение</b>
+</header>
+<hr>
+<form method=post enctype=multipart/form-data> 
+    <dl>
+        <div class="row align-self-start gap-4 mx-3">
+            <div class="col-md-auto">
+                {{ render_field(form.checkup_date) }}
+            </div>
+            <div class="col-md-auto">
+                {{ render_field(form.next_checkup_date) }}
+            </div>
+            <div class="col-md-auto">
+                {{ render_field(form.inspector) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.ambient_temp) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.total_light) }}
+            </div>
+            
+            <div class="col-md-auto">
+                {{ render_field(form.surface_light) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.tape_number) }}
+            </div>
+        </div>
+        
+        <hr>
+
+        <div class="row align-self-start gap-4 mx-3">
+            <div class="col-md-auto">
+                {{ render_field(form.owner) }}
+            </div>
+            <div class="col-md-auto">
+                {{ render_field(form.setup) }}
+            </div>
+            <div class="col-md-auto">
+                {{ render_field(form.location) }}
+            </div>
+        </div>
+
+        <div class="row align-self-start gap-4 mx-3">
+            <div class="col-md-auto">
+                {{ render_field(form.serial_number) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.name) }}
+            </div>
+            
+            <div class="col-md-auto">
+                {{ render_field(form.comment) }}
+            </div>
+        </div>
+
+        <div class="row align-self-start gap-4 mx-3">
+            <div class="col-md-auto">
+                {{ render_field(form.manufacturer) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.batch_number) }}
+            </div>
+            
+            <div class="col-md-auto">
+                {{ render_field(form.life_time) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.commissioned) }}
+            </div>
+        </div>
+
+        <hr>
+<!-- VIC: Start -->
+        <div class="row align-self-start gap-4 mx-3">
+            <div class="col-md-auto">
+                {{ render_field(form.VIC) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.visual_good) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.visual_comment) }}
+            </div>
+        </div>
+
+        <hr>
+<!-- VIC: End -->
+
+<!-- UZT: Start -->
+        <div class="row align-self-start gap-4 mx-3">
+            <div class="col-md-auto">
+                {{ render_field(form.UZT) }}
+            </div>
+        </div>
+        <div class="row align-self-start gap-4 mx-3">
+            <div class="col-md-auto">
+                {{ render_field(form.T1) }}
+                {{ render_field(form.min_T1) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.T2) }}
+                {{ render_field(form.min_T2) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.T3) }}
+                {{ render_field(form.min_T3) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.T4) }}
+                {{ render_field(form.min_T4) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.T5) }}
+                {{ render_field(form.min_T5) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.T6) }}
+                {{ render_field(form.min_T6) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.T7) }}
+                {{ render_field(form.min_T7) }}
+            </div>
+        </div>
+        <div class="row align-self-start gap-4 mx-3">
+            <div class="col-md-auto">
+                {{ render_field(form.UZT_good) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.residual) }}
+            </div>
+        </div>
+
+        <hr>
+<!-- UZT: End -->
+
+<!-- UK: Start -->
+        <div class="row align-self-start gap-4 mx-3">
+            <div class="col-md-auto">
+                {{ render_field(form.UK) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.UK_good) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.UK_comment) }}
+            </div>
+        </div>
+
+        <hr>
+<!-- UK: End -->
+
+<!-- MK: Start -->
+        <div class="row align-self-start gap-4 mx-3">
+            <div class="col-md-auto">
+                {{ render_field(form.MK) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.MK_good) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.MK_comment) }}
+            </div>
+        </div>
+
+        <hr>
+<!-- MK: End -->
+
+<!-- Hydro: Start -->
+        <div class="row align-self-start gap-4 mx-3">
+            <div class="col-md-auto">
+                {{ render_field(form.Hydro) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.stage1) }}
+                {{ render_field(form.duration1) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.stage2) }}
+                {{ render_field(form.duration2) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.stage3) }}
+                {{ render_field(form.duration3) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.stage4) }}
+                {{ render_field(form.duration4) }}
+            </div>
+        </div>
+        <div class="row align-self-start gap-4 mx-3">
+            <div class="col-md-auto">
+                {{ render_field(form.Hydro_good) }}
+            </div>
+        </div>
+
+        <hr>
+<!-- Hydro: End -->
+
+<!-- Hydro_preventer: Start -->
+        <div class="row align-self-start gap-4 mx-3">
+            <div class="col-md-auto">
+                {{ render_field(form.Hydro_preventer) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.preventer_diameter) }}
+            </div>
+        </div>
+        <div class="row align-self-start gap-4 mx-3">
+            <div class="col-md-auto">
+                {{ render_field(form.sketch_GI_body_img) }}
+            </div>
+            <div class="col-md-auto">
+                {{ render_field(form.sketch_GI_pipes_img) }}
+            </div>
+            <div class="col-md-auto">
+                {{ render_field(form.sketch_GI_vac_img) }}
+            </div>
+        </div>
+
+        <hr>
+<!-- Hydro_preventer: End -->
+
+<!-- Calibration: Start -->
+        <div class="row align-self-start gap-4 mx-3">
+            <div class="col-md-auto">
+                {{ render_field(form.calibration) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.calibration_pressure) }}
+            </div>
+            <div class="col-md-auto">
+                {{ render_field(form.sketch_calibration_img) }}
+            </div>
+        </div>
+
+        <hr>
+<!-- Calibration: End -->
+
+<!-- Multiple_tests: Start -->
+        <div class="row align-self-start gap-4 mx-3">
+            <div class="col-md-auto">
+                {{ render_field(form.multiple_tests) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.double_test) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.one_and_a_half_test) }}
+            </div>
+
+            <div class="col-md-auto">
+                {{ render_field(form.one_and_a_fifth_test) }}
+            </div>
+
+        </div>
+        <div class="row align-self-center gap-4 mx-3">
+            <div class="col-md-auto">
+                {{ render_field(form.sketch_multiple_tests_img) }}
+            </div>
+        </div>
+
+        <hr>
+<!-- Multiple_tests: End -->
+
+    </dl>
+    <div class="row flex-nowraw gap-3 mx-3">
+        <input type="hidden" id="fill_from_form" name="fill_from_form" value="true" />
+        <div class="col-md-auto align-self-center"> 
+            <input class="btn align-self-center bg-dark-subtle btn-outline-dark" type="submit" value="{{add_or_edit}}">
+        </div>
+    </div>
+</form>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const do_not_wipe_off_elemets_ids = [  "min_T1", "min_T2", "min_T3", "min_T4", "min_T5", "min_T6", "min_T7", 
+                                "stage1", "stage2", "stage3", "stage4", 
+                                "duration1", "duration2", "duration3", "duration4", 
+                                "residual"];
+
+    const vic_fields_names = ["visual_good", "visual_comment"];
+    const uzt_fields_names = ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "UZT_good", "residual"];
+    const uk_fields_names = ["UK_good", "UK_comment"];
+    const mk_fields_names = ["MK_good", "MK_comment"];
+    const hydro_fields_names = ["Hydro_good", "stage1", "stage2", "stage3", "stage4", "duration1", "duration2", "duration3", "duration4"];
+    const hydro_preventer_fields_names = ["preventer_diameter", "sketch_GI_body_img", "sketch_GI_pipes_img", "sketch_GI_vac_img"];
+    const calibration_fields_names = ["calibration_pressure", "sketch_calibration_img"];
+    const multiple_tests_fields_names = ['double_test', 'one_and_a_half_test', 'one_and_a_fifth_test', 'sketch_multiple_tests_img'];
+
+    const rep_parts = {
+        VIC : vic_fields_names,
+        UZT : uzt_fields_names,
+        UK : uk_fields_names,
+        MK : mk_fields_names,
+        Hydro : hydro_fields_names,
+        Hydro_preventer : hydro_preventer_fields_names,
+        calibration : calibration_fields_names,
+        multiple_tests : multiple_tests_fields_names
+    };
+
+    // Check out the top answer here: https://stackoverflow.com/questions/56849253/efficient-way-to-request-back-end-for-data-on-input-change
+    // Returns a function, that, as long as it continues to be invoked, will not
+    // be triggered. The function will be called after it stops being called for
+    // N milliseconds. If `immediate` is passed, trigger the function on the
+    // leading edge, instead of the trailing.
+    function debounce(func, wait, immediate) {
+        var timeout;
+        return function() {
+            var context = this, args = arguments;
+            var later = function() {
+                timeout = null;
+                if (!immediate) func.apply(context, args);
+            };
+            var callNow = immediate && !timeout;
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+            if (callNow) func.apply(context, args);
+        };
+    };
+
+
+    document.getElementById('tape_number').addEventListener('change', debounce(function(e){
+        const hardware_info_url = {{ url_for(sidebar_urls["Reports.load_hardware_data_from_DB"], tape_number='') |tojson }} + e.target.value;
+        fetch(hardware_info_url)
+            .then(res => res.json())
+            .then((res) => {
+                const data = res.data;
+                Object.entries(res).forEach(([key, value]) => {
+                    const element = document.getElementById(key);
+                    if(element) {
+                        element.value = value;
+                    } else {
+                        console.error(`Element with id ${key} and val ${value} not found.`);
+                    }
+                });
+            });
+    }, 500));
+
+    const ts = ["T1", "T2", "T3", "T4", "T5", "T6", "T7"];
+    const calc_residual = debounce(function(e) {
+        const residuals = ts.map(function(el) {
+            t = document.getElementById(el);
+            min_t = document.getElementById("min_" + el);
+            if(t && min_t) {
+                return t.value - min_t.value;
+            }
+            else {
+                return NaN;
+            }
+        });
+        const filtered_residuals = residuals.filter((residual) => !isNaN(residual));
+        residual_field = document.getElementById("residual");
+        
+        if(residual_field) {
+            residual_field.value = Math.min(...filtered_residuals);
+        }
+        else {
+            residual_field.value = '';
+        }
+    }, 500);
+        
+    ts.forEach(item => { document.getElementById(item).addEventListener('change', calc_residual); });
+    
+    for (const key of Object.keys(rep_parts)) {
+        document.getElementById(key).addEventListener('change', function(e){
+            if (this.checked) {
+                rep_parts[key].forEach((item, index) => {
+                    if(!do_not_wipe_off_elemets_ids.includes(item)) {
+                        document.getElementById(item).readOnly = false;
+                        document.getElementById(item).disabled = false;
+                    }
+                });
+            } else {
+                rep_parts[key].forEach((item, index) => {
+                    if(!do_not_wipe_off_elemets_ids.includes(item)) {
+                        document.getElementById(item).value = '';
+                        document.getElementById(item).readOnly = true;
+                        document.getElementById(item).disabled = true;
+                    }
+                });
+            }
+        });
+    };
+
+</script>
+{% endblock %}

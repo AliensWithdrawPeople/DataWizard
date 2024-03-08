@@ -1,19 +1,20 @@
 from flask import Flask, render_template
 from flask_login import login_required, current_user
 
-from modules.auth import auth, login_manager
-from modules.lab import lab
-from modules.organizations import organizations
-from modules.reports import reports
-from modules.aux_scripts.Templates_params import sidebar_urls
-
 import config
 
 app = Flask(__name__)
+
+from modules.auth import auth, login_manager
+from modules.lab import lab
+from modules.organizations import organizations
+from modules.reports.base_report import base_report
+from modules.aux_scripts.Templates_params import sidebar_urls
+
 app.register_blueprint(auth)
 app.register_blueprint(lab)
 app.register_blueprint(organizations)
-app.register_blueprint(reports)
+app.register_blueprint(base_report)
 
 app.secret_key = config.secret_key
 login_manager.init_app(app)

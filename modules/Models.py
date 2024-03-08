@@ -15,14 +15,15 @@ role_python_enum = Enum('role_python_enum', ['admin', 'inspector', 'client'])
 method_enum = ENUM('ВИК', 'УЗТ', 'УК', 'МК', 'ПВК', 'ГИ', name='method_enum')
 method_python_enum = Enum('method_python_enum', ['ВИК', 'УЗТ', 'УК', 'МК', 'ПВК', 'ГИ'])
 
-report_type_postgres = ENUM('VCM', 'UTM', 'MPI', 'HT', name='report_type_postgres')
+report_type_postgres = ENUM('VCM', 'UTM', 'MPI', 'HT', name='report_type_postgres', create_type=False)
 
+# Value of report_type is key to method_enum!!!
 class report_type(Enum):
-    VCM = 'VCM'
-    UTM = 'UTM'
-    MPI = 'MPI'
-    HT = 'HT'
-
+    VCM = 'ВИК'
+    UTM = 'УЗТ'
+    MPI = 'МК'
+    HT = 'ГИ'
+    
 class Base(DeclarativeBase):
     pass
 
@@ -47,7 +48,7 @@ class Unit(Base):
     supervisor_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id'))
     location: Mapped[VARCHAR] = mapped_column(VARCHAR(50))
     sector: Mapped[VARCHAR] = mapped_column(VARCHAR(50)) # Участок
-    setup_name: Mapped[VARCHAR] = mapped_column(VARCHAR(50)) # Номер установки
+    setup_name: Mapped[VARCHAR] = mapped_column(VARCHAR(50), unique=True) # Номер установки
     
     company: Mapped[Company] = relationship("Company", back_populates="units")
     supervisor: Mapped["User"] = relationship("User", back_populates="units")
@@ -75,7 +76,6 @@ class User(Base):
     
     def __repr__(self) -> str:
         return f"User(id={self.id!r}, name={self.name!r}, role={self.role!r})"
-        
 
 class Tool(Base):
     __tablename__ = 'tools'
@@ -103,7 +103,7 @@ class Catalogue(Base):
     
     manufacturer = mapped_column(VARCHAR(200))
     manufacturer_logo_id = mapped_column(Integer, ForeignKey('images.id'), nullable=True)
-    batch_number = mapped_column(VARCHAR(200))
+    batch_number = mapped_column(VARCHAR(200), unique=True)
     
     # In years
     life_time = mapped_column(Integer)
@@ -156,9 +156,6 @@ class Hardware(Base):
     # When it started to be used
     commissioned = mapped_column(Date)
     
-    last_checkup = mapped_column(Date)
-    next_checkup = mapped_column(Date)
-    
     type: Mapped[Catalogue] = relationship("Catalogue", back_populates="hardwares")
     unit: Mapped[Unit] = relationship("Unit", back_populates="hardwares")
     reports: Mapped[List["Report"]] = relationship('Report', back_populates='hardware')
@@ -170,8 +167,9 @@ class Report(Base):
     hardware_id = mapped_column(Integer, ForeignKey('hardware.id'))
     inspector_id = mapped_column(Integer, ForeignKey('users.id'))
     
-    report_types: Mapped[ARRAY] = mapped_column(ARRAY(report_type_postgres))
+    report_types: Mapped[ARRAY] = mapped_column(ARRAY(Text))
     checkup_date: Mapped[Date] = mapped_column(Date)
+    next_checkup_date: Mapped[Date] = mapped_column(Date)
     
     ambient_temp = mapped_column(Float)
     total_light = mapped_column(Float)
@@ -188,7 +186,7 @@ class Report(Base):
     T6 = mapped_column(Float)
     T7 = mapped_column(Float)
     
-    uzt_result = mapped_column(Boolean)
+    UZT_good = mapped_column(Boolean)
     residual = mapped_column(Float)
     
     UK_good = mapped_column(Boolean)
@@ -199,6 +197,12 @@ class Report(Base):
     
     hydro_result = mapped_column(Text)
     GI_preventor_good = mapped_column(Boolean)
+    preventer_diameter = mapped_column(Float)
+    
+    calibration_pressure = mapped_column(Float)
+    double_test = mapped_column(Boolean)
+    one_and_a_half_test = mapped_column(Boolean)
+    one_and_a_fifth_test = mapped_column(Boolean)
     
     GI_body_sketch_id = mapped_column(Integer, ForeignKey('images.id'), nullable=True)
     """ Эскиз ГИ корпус."""

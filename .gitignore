@@ -2,5 +2,9 @@
 *.jpeg
 *.jpg
 *.pyc
-/modules/aux_scripts/ReportForge/html
-/modules/aux_scripts/ReportForge/pdf
+*.log
+/modules/ReportForge/html
+/modules/ReportForge/pdf
+tempCodeRunnerFile.py
+settings.json
+*.js

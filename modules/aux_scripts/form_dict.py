@@ -1,5 +1,4 @@
 from .. import Models
-from datetime import timedelta
 from flask import request, url_for, current_app
 from sqlalchemy import select
 
@@ -30,9 +29,8 @@ def form_json(session_db, model, form_dict_func, check_role_func, filter_dict: d
     delete_list = request.args.get('delete_list')
     if(not delete_list is None and delete_list != ''):
         delete_list = list(map(int, delete_list.split(",")))
-        print('delete_list =', delete_list, flush=True)
         if(len(delete_list) > 0):
-            current_app.logger.info('Wow! I am deleting them: %s', delete_list, exc_info=True)
+            current_app.logger.info('Wow! I am deleting them (of type %s): %s', str(model), delete_list, exc_info=True)
             objs = list(session_db.scalars(selected.where(model.id.in_(delete_list))).all())
             for obj in objs:
                 session_db.delete(obj)
@@ -46,7 +44,7 @@ def form_json(session_db, model, form_dict_func, check_role_func, filter_dict: d
 
     objs = session_db.scalars(selected).all()
     objs = [form_dict_func(obj) for obj in objs]
-        
+    session_db.connection().close()    
     return {'data': objs}
 
 def form_server_side_json(session_db, model, form_dict_func, check_role_func, where_clause, filter_dict: dict={}):
@@ -60,7 +58,7 @@ def form_server_side_json(session_db, model, form_dict_func, check_role_func, wh
         sqlalchemy ORM model with id field
     form_dict_func : Callable
     check_role_func : Callable
-    where_clause: SQLalchemy where clause is used in search
+    where_clause: function that takes search from frontend and returns a valid SQLalchemy where clause used in search
     filter_dict : dict, optional
         {filter_name, filter_func}, by default {}
         filter_func(selected, model, filter_val)->selected
@@ -79,12 +77,12 @@ def form_server_side_json(session_db, model, form_dict_func, check_role_func, wh
     if(not delete_list is None and delete_list != ''):
         delete_list = list(map(int, delete_list.split(",")))
         if(len(delete_list) > 0):      
-            current_app.logger.info('Wow! I am deleting them: %s', delete_list, exc_info=True)
+            current_app.logger.info('Wow! I am deleting them (of type %s): %s', str(model), delete_list, exc_info=True)
             objs = list(session_db.scalars(selected.where(model.id.in_(delete_list))).all())
             for obj in objs:
                 session_db.delete(obj)
             session_db.commit()
-            selected = select(Models.Tool)
+            selected = select(model)
             
     # search filter
     for name, filter in filter_dict.items():
@@ -94,7 +92,7 @@ def form_server_side_json(session_db, model, form_dict_func, check_role_func, wh
     # search
     search = request.args.get('search[value]')
     if search:
-        selected = selected.where(where_clause)
+        selected = selected.where(where_clause(search))
     total_filtered = len(session_db.scalars(selected).all())
     
     # TODO: sorting
@@ -111,25 +109,6 @@ def form_server_side_json(session_db, model, form_dict_func, check_role_func, wh
             'recordsTotal': total,
             'draw': request.args.get('draw', type=int),
         }
-     
-def form_hardware_dict(hardware: Models.Hardware, is_inspector: bool)->dict:
-    res = {
-        'Компания' : hardware.unit.company.name,
-        'Юнит' : hardware.unit_id,
-        'Место дислокации' : hardware.unit.location,
-        'Название' : hardware.type.name,
-        'Характеристики' : hardware.type.comment,
-        'Производитель' : hardware.type.manufacturer,
-        'Номер партии' : hardware.type.batch_number,
-        'Серийный номер' : hardware.serial_number,
-        'Дата ввода в эксплуатацию' : hardware.commissioned,
-        'Дата списания' : hardware.commissioned + timedelta(days=365 * hardware.type.life_time),
-        'Дата последнего исследования' : hardware.last_checkup,
-        'Дата следующего исследования' : hardware.next_checkup
-    }
-    if(not is_inspector):
-        res.pop('Компания')
-    return res
 
 def form_user_dict(user: Models.User)->dict:
     res = {
@@ -188,5 +167,45 @@ def form_cat_dict(elem: Models.Catalogue)->dict:
         'Производитель' : elem.manufacturer,
         'Партийный номер' : elem.batch_number,
         'Максимальное рабочее давление' : elem.max_pressure
+    }
+    return res
+
+def form_hardware_dict(elem: Models.Hardware)->dict:
+    res = {
+            'id' : elem.id,
+            'Наименование' : elem.type.name,
+            'Хар-ки' : elem.type.comment,
+            'Производитель' : elem.type.manufacturer,
+            'Партийный №' : elem.type.batch_number,
+            'Серийный №' : elem.serial_number,
+            'Бандаж №' : elem.tape_number,
+            'Дата ввэ' : elem.commissioned,
+            'Владелец' : elem.unit.company.name,
+            'Установка' : elem.unit.setup_name
+        }
+    return res
+
+def format_report_field(elem: Models.Report)-> str:
+    def bool_to_human_readable(is_good: bool, opts: tuple[str, str]=('герметичный', 'негерметичный'))->str:
+        return 'годен' if is_good else 'негоден'
+        
+    is_good = {
+        'ВИК' : bool_to_human_readable(elem.visual_good) if elem.visual_good is not None else None,
+        'УЗТ' : bool_to_human_readable(elem.UZT_good) if elem.UZT_good is not None else None,
+        'МК' : bool_to_human_readable(elem.UK_good) if elem.UK_good is not None else None,
+        'МК' : bool_to_human_readable(elem.MK_good) if elem.MK_good is not None else None,
+        'ГИ' : bool_to_human_readable(elem.GI_preventor_good) if elem.GI_preventor_good is not None else None
+    } 
+    res = [f"{key} : {val}" for key, val in is_good.items() if val is not None]
+    return '\n'.join(res)
+    
+def form_report_dict(elem: Models.Report)->dict:
+    res = {
+        'id' : elem.id,
+        'Бандаж №' : elem.hardware.tape_number,
+        'Наименование' :elem.hardware.type.name,
+        'Серийный №' : elem.hardware.serial_number,
+        'Дата проведения' : elem.checkup_date,
+        'Отчёт' : format_report_field(elem)
     }
     return res

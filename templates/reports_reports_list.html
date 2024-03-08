@@ -4,14 +4,30 @@
 <div class="container-fluid py-lg-3">
 
     <div class="hstack gap-3 col-md-auto align-self-lg-start ">
-        <a class="btn btn-primary" href="{{ url_for(sidebar_urls['Reports.add_hardware'])}}">Добавить</a>
+        <a class="btn btn-primary" href="{{ url_for(sidebar_urls['Reports.add_report'])}}">Добавить</a>
         <button class=" btn btn-danger bg-danger" type="button" id="delete_elements_button" name="" onclick="delete_elements()">Удалить выбранные</button>
-        <button class=" btn btn-danger" type="button" id="create_reports_button" name="" onclick="create_reports()">Скачать отчёты для выбранных</button>
+        <button class=" btn btn-primary" type="button" id="select_all" name="" onclick="select_all()">Выбрать все</button>
+
+        <button class=" btn btn-primary" type="button" id="create_reports_button" name="" onclick="create_reports()">Скачать выбранные</button>
+
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" value="checked" id="Facsimile_check">
+            <label class="form-check-label" for="flexCheckDefault">
+                Факсимиле
+            </label>
+        </div>
+
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" value="checked" id="Stamp_check">
+            <label class="form-check-label" for="flexCheckDefault">
+                Печать в заключение
+            </label>
+        </div>
     </div>
 
     <!-- filters -->
-    <div class="hstack gap-3 col-lg-4 align-self-start">
-        <div class="vstack gap-1 col-md-auto">
+    <div class="hstack gap-4 col-xl-2 align-self-start">
+        <div class="vstack gap-1 col-lg-auto">
             <div id="manufacturer_filter_val">Производитель</div>
             <div class="btn-group">
                 <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" id="manufacturer_filter_button">Все</button>
@@ -51,6 +67,11 @@
         </div>
 
         <div class="vstack gap-1 col-md-auto">
+            <div id="setup_filter_val">Дата проведения</div>
+            <input type="date" id="checkup_date_filter_input" name="checkup_date" onchange="set_checkup_date_filter_val()"/>
+        </div>
+
+        <div class="vstack gap-1 col-md-auto">
             <div id="location_filter_val">Место дислокации</div>
             <div class="btn-group">
                 <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" id="location_filter_button">Все</button>
@@ -72,19 +93,15 @@
             background-color: rgb(107, 159, 249) !important; /* Add !important to make sure override datables base styles */
         }
     </style>
-    <table id="hard_table" class="table table-bordered table"  style="width:100%">
+    <table id="reports_table" class="table table-bordered table"  style="width:100%">
         <thead>
         <tr>
             <th>id</th>
-            <th>Наименование</th>
-            <th>Хар-ки</th>
-            <th>Производитель</th> <!-- points to href with it -->
-            <th>Партийный №</th>
-            <th>Серийный №</th>
             <th>Бандаж. №</th>
-            <th>Дата ввода в эксплуатацию</th>
-            <th>Владелец</th>
-            <th>Установка</th>
+            <th>Наименование</th>
+            <th>Серийный №</th>
+            <th>Дата проведения</th>
+            <th>Отчёт</th>
             <th>Действия</th>
         </tr>
         </thead>
@@ -98,11 +115,11 @@
 <script>
     const selected = [];
     let delete_list = [];
-    var table = $('#hard_table').DataTable({
+    var table = $('#reports_table').DataTable({
         retrieve: true,
         serverSide: true,
         ajax: {
-                url: '/api/data/reports/hardware',
+                url: '/api/data/reports/current',
                 rowId: 'id',
                 data: function ( d ) {
                     return $.extend( {}, d, {
@@ -110,6 +127,7 @@
                         "setup_filter": document.getElementById('setup_filter_button').innerText,
                         "manufacturer_filter": document.getElementById('manufacturer_filter_button').innerText,
                         "location_filter": document.getElementById('location_filter_button').innerText,
+                        "checkup_date_filter": document.getElementById('checkup_date_filter_input').value,
                         "delete": get_delete_list()
                     } );
                 },
@@ -121,22 +139,19 @@
         },
         columns: [
             {data: 'id'},
-            {data: 'Наименование'},
-            {data: 'Хар-ки'},
-            {data: 'Производитель'},
-            {data: 'Партийный №'},
-            {data: 'Серийный №'},
             {data: 'Бандаж №'},
-            {data: 'Дата ввэ'},
-            {data: 'Владелец'},
-            {data: 'Установка'},
+            {data: 'Наименование'},
+            {data: 'Серийный №'},
+            {data: 'Дата проведения'},
+            {data: 'Отчёт'},
             {
                 data: null,
                 render: function ( data, type, row, meta ) {
                 return  '<div class="d-grid gap-2">' +
                             '<button type="button" class="btn btn-primary btn-sm" onclick="edit_element(' + row.id + ')">Изменить</button>' +
-                            '<button type="button" class="btn btn-primary btn-sm" onclick="add_report(' + row.id + ')"><i class="bi bi-file-earmark-plus"></i></button>' +
                             '<button type="button" class="btn btn-primary btn-sm" onclick="delete_element(' + row.id + ')">Удалить</button>' +
+                            // TODO: История onclick
+                            '<button type="button" class="btn btn-primary btn-sm" onclick="">История</button>' +
                         '</div>';
                 },
             },
@@ -159,6 +174,18 @@
         $(this).toggleClass('selected');
     });
 
+    function select_all() {
+        document.querySelectorAll('');
+        table.rows({page: 'current'})
+        var items = document.querySelectorAll(".tr");
+        for (var i = 0; i < items.length; i++) {
+            let id = items[i].childNodes[0].innerHTML;
+            if (!$.inArray(id, selected)) {
+                items[i].click();
+            }
+        }
+    }
+
     function delete_elements() {
         if(selected.length != 0) {
             if (confirm("Вы хотите удалить " + table.rows('.selected').data().length + ' элемент(ов). Вы уверены?')) {
@@ -174,7 +201,9 @@
         if(selected.length != 0) {
             let reports_request = {
                 "name": "create_reports",
-                "hardware_ids": selected,
+                "report_ids": selected,
+                "Facsimile_check": document.getElementById("Facsimile_check").checked,
+                "Stamp_check": document.getElementById("Stamp_check").checked,
             }
 
             fetch({{ url_for(sidebar_urls['Reports.create_reports'])|tojson }}, {
@@ -182,6 +211,16 @@
                 "headers": {"Content-Type": "application/json"},
                 "body": JSON.stringify(reports_request),
             })
+                .then((res) => res.blob())
+                .then((res) => {
+                const aElement = document.createElement("a");
+                aElement.setAttribute("download", 'report');
+                const href = URL.createObjectURL(res);
+                aElement.href = href;
+                aElement.setAttribute("target", "_blank");
+                aElement.click();
+                URL.revokeObjectURL(href);
+                });
         }
     }
 
@@ -194,7 +233,7 @@
     }
 
     function edit_element(id) {
-        window.location.href = {{ url_for(sidebar_urls["Reports.edit_hardware"], id=id)|tojson }} + id
+        window.location.href = {{ url_for(sidebar_urls["Reports.edit_report"], id=id)|tojson }} + id
     }
 
     function add_report(id) {
@@ -219,6 +258,10 @@
 
     function set_location_filter_val(val) {    
         document.getElementById("location_filter_button").innerText = val;
+        table.ajax.reload();
+    }
+
+    function set_checkup_date_filter_val() {    
         table.ajax.reload();
     }
 </script>

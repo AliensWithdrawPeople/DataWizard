@@ -5,13 +5,13 @@ from modules.Attachment.AttachmentHandler import AttachmentHandler
 from sqlalchemy import select, or_
 from sqlalchemy.exc import NoResultFound, MultipleResultsFound
 
-from .db_connecter import get_session
-from . import Models
+from ..db_connecter import get_session
+from .. import Models
 
-from .aux_scripts.form_dict import form_server_side_json, form_hardware_dict
-from .aux_scripts.Templates_params import sidebar_urls
-from .aux_scripts.forms import Cat_form, Hardware_form, FileField
-from .aux_scripts.check_role import check_id
+from ..aux_scripts.form_dict import form_server_side_json, form_hardware_dict
+from ..aux_scripts.Templates_params import sidebar_urls
+from ..aux_scripts.forms import Cat_form, Hardware_form, FileField
+from ..aux_scripts.check_role import check_id, check_inspector
 
 hardware = Blueprint('hardware', __name__)
 
@@ -34,22 +34,22 @@ def hardware_list():
 def hardware_json():
     def owner_filter(selected, model, filter_val):
         if not filter_val is None and filter_val != 'Все':
-            selected = selected.where(model.unit.company.name == filter_val)
+            selected = selected.join_from(model, Models.Company).where(Models.Company.name == filter_val)
         return selected
     
     def setup_filter(selected, model, filter_val):
         if not filter_val is None and filter_val != 'Все':
-            selected = selected.where(model.unit.setup_name == filter_val)
+            selected = selected.join_from(model, Models.Unit).where(Models.Unit.setup_name == filter_val)
         return selected
     
     def manufacturer_filter(selected, model, filter_val):
         if not filter_val is None and filter_val != 'Все':
-            selected = selected.where(model.type.manufacturer == filter_val)
+            selected = selected.join_from(model, Models.Catalogue).where(Models.Catalogue.manufacturer == filter_val)
         return selected
     
     def location_filter(selected, model, filter_val):
         if not filter_val is None and filter_val != 'Все':
-            selected = selected.where(model.unit.location == filter_val)
+            selected = selected.join_from(model, Models.Unit).where(Models.Unit.location == filter_val)
         return selected
     
     filter_dict = {
@@ -58,7 +58,6 @@ def hardware_json():
         'manufacturer_filter': manufacturer_filter,
         'location_filter': location_filter
     }
-    #TODO: Create an actual search where clause.
     search_clause = lambda search_val: or_(
         Models.Hardware.type.name.like(f'%{search_val}%'),
         Models.Hardware.type.comment.like(f'%{search_val}%'),
@@ -76,13 +75,14 @@ def hardware_json():
 @hardware.route("/reports/hardware/edit/<id>", methods=('GET', 'POST'), endpoint='edit_hardware')
 @login_required
 def add_hardware(id=None):
-    check_id(id, 'Lab.tools')
+    check_id(id, 'Reports.hardware')
+    check_inspector()
     req_form = request.form
     form = Hardware_form(req_form)
     type_form = Cat_form(req_form, prefix='type')
     for fieldname, _ in type_form.data.items():
         field = type_form[fieldname]
-        field.render_kw = {'readonly': True}
+        field.render_kw = {'readonly': True, 'disabled' : True}
         if(type(field) is FileField):
             del field
 
@@ -117,8 +117,24 @@ def add_hardware(id=None):
             form.commissioned.data = datetime.datetime.strptime(str(hardware_obj.commissioned), "%Y-%m-%d").date()
         add_or_edit = 'Редактировать'
         return render_template('add_tool.html', is_admin=is_admin, username=username, sidebar_urls=sidebar_urls, add_or_edit=add_or_edit, form=form)
+    
+    try:
+        is_unique_tape_number = session_db.scalars(select(Models.Hardware.id).where(Models.Hardware.tape_number == form.tape_number.data)).one() is None
+    except MultipleResultsFound as e:
+        current_app.logger.warn('Houston, we have a trouble with obtaining data from DB: %s', e, exc_info=True)
+        is_unique_tape_number = False
+    except NoResultFound as e:
+        is_unique_tape_number = True
         
-    if request.method == 'POST' and form.validate() and not session_db.scalars(select(Models.Catalogue.id).where(Models.Catalogue.batch_number == form.batch_number.data)).one_or_none() is None:
+    # TODO: Add info banner to the screen about uniqueness of tape number.
+    if not is_unique_tape_number:
+        tmp = list(form.tape_number.errors)
+        tmp.append("Номер бандажной ленты должен быть уникальным.")
+        form.tape_number.errors = tuple(tmp)
+        print(form.tape_number.errors)
+        
+    if request.method == 'POST' and form.validate() and is_unique_tape_number:
+        current_app.logger.info('Hardware/tape_number = #%s', form.tape_number.data, exc_info=True)
         data = {
             'company_id': form.owner.data,
             'unit_id': session_db.scalars(select(Models.Unit.id).where(Models.Unit.setup_name == form.setup.data)).one_or_none(),
@@ -127,7 +143,10 @@ def add_hardware(id=None):
             'serial_number': form.serial_number.data,
             'commissioned': form.commissioned.data
         }
-        
+        for key, val in data.items():
+            if type(val) is str:
+                val = val.strip()
+                
         if not id is None:
             hardware = session_db.scalars(select(Models.Hardware).where(Models.Hardware.id == str(id))).one()           
             for key, val in data.items():
@@ -149,32 +168,34 @@ def get_hardware_type_info(batch_number=None):
     if batch_number is None:
         return {}
     session_db = get_session()
+    current_app.logger.info('Trying to access hardware type info; batch number = %s', str(batch_number))
     selected = select(Models.Catalogue).where(Models.Catalogue.batch_number == str(batch_number))
     try:
         hardware_type = session_db.scalars(selected).one()
     except (NoResultFound, MultipleResultsFound) as e:
         current_app.logger.warn('Houston, we have a trouble with obtaining data from DB: %s', e, exc_info=True)
         return {}
-    current_app.logger.info('Hardware type info accessed; batch number = %s', str(batch_number), exc_info=True)
+    current_app.logger.info('Hardware type info accessed; batch number = %s', str(batch_number))
     res = {
-        'name': hardware_type.name,
-        'comment': hardware_type.comment,
-        'manufacturer': hardware_type.manufacturer,
-        'life_time': hardware_type.life_time,
-        'T1': hardware_type.T1,
-        'T2': hardware_type.T2,
-        'T3': hardware_type.T3,
-        'T4': hardware_type.T4,
-        'T5': hardware_type.T5,
-        'T6': hardware_type.T6,
-        'T7': hardware_type.T7,
-        'stage1': hardware_type.stage1,
-        'duration1': hardware_type.duration1,
-        'stage2': hardware_type.stage2,
-        'duration2': hardware_type.duration2,
-        'stage3': hardware_type.stage3,
-        'duration3': hardware_type.duration3,
-        'stage4': hardware_type.stage4,
-        'duration4': hardware_type.duration4
+        'type-batch_number' : hardware_type.batch_number,
+        'type-name': hardware_type.name,
+        'type-comment': hardware_type.comment,
+        'type-manufacturer': hardware_type.manufacturer,
+        'type-life_time': hardware_type.life_time,
+        'type-T1': hardware_type.T1,
+        'type-T2': hardware_type.T2,
+        'type-T3': hardware_type.T3,
+        'type-T4': hardware_type.T4,
+        'type-T5': hardware_type.T5,
+        'type-T6': hardware_type.T6,
+        'type-T7': hardware_type.T7,
+        'type-stage1': hardware_type.stage1,
+        'type-duration1': hardware_type.duration1,
+        'type-stage2': hardware_type.stage2,
+        'type-duration2': hardware_type.duration2,
+        'type-stage3': hardware_type.stage3,
+        'type-duration3': hardware_type.duration3,
+        'type-stage4': hardware_type.stage4,
+        'type-duration4': hardware_type.duration4
     }
     return jsonify(res)

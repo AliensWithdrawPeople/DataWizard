@@ -1,12 +1,11 @@
 from enum import Enum
 from typing import Any
 from zipfile import ZipFile
-from attr import dataclass
 import dataclasses
 
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
-from sqlalchemy import select
+from sqlalchemy import select, and_
 from flask import current_app
 from flask_login import current_user
 from jinja2 import Environment, FileSystemLoader
@@ -16,14 +15,17 @@ import base64
 import uuid
 import sys
 import datetime
+from multiprocessing.pool import ThreadPool
+import numpy as np
 
-gtk_path = pathlib.PurePath(os.environ['GTK'])
-if os.path.isdir(gtk_path) and not str(gtk_path) in sys.path: 
-    sys.path.append(str(gtk_path))
+if 'GTK' in os.environ.keys():
+    gtk_path = pathlib.PurePath(os.environ['GTK'])
+    if os.path.isdir(gtk_path) and not str(gtk_path) in sys.path: 
+        sys.path.append(str(gtk_path))
 from weasyprint import HTML
 
 from ..db_connecter import get_session
-from ..Models import Report, report_type, Img
+from ..Models import Report, report_type, Img, Tool
 import config
 
 # Helper functions
@@ -32,44 +34,45 @@ def date_to_rus(date: datetime.date)->str:
     return f'{date.day} {months[date.month]} {date.year} г.'
 
 def get_name(fullname: str)->str:
-    name = list(filter(lambda _: bool(_.strip()), fullname.split(' ')))
-    return f'{name[1][0]}. {name[2][0]}. {name[0]}'
+    try:
+        name = list(filter(lambda _: bool(_.strip()), fullname.split(' ')))
+        return f'{name[1][0]}. {name[2][0]}. {name[0]}'
+    except:
+        return 'admin'
 
 def get_type_specific_params(report: Report, rep_type: report_type)->dict[str, Any]:
     res = {}
     session_db = get_session()
+    raw_tools = list(session_db.scalars(select(Tool).where(and_(Tool.method == report_type[str(rep_type)].value, Tool.is_active == True))).all())
+    tools = [f"{tool.name} {tool.model} {tool.factory_number} от {tool.prev_checkup.strftime('%m.%d.%Y')} г." for tool in raw_tools] # type: ignore
     match str(rep_type):
-        case report_type.VCM.value:
-            res = { "tools" : ["Лупаизмерительная ЛИ-3-10 No230236", 'Линейка измерительная "Калиброн" No3158 от 18.04.23 г.', 'Штангенциркуль "Калиброн" 0-150 No102201991 от 18.04.23 г.', 
-                            'Набор шаблонов  "Etalon" No 1 No2021491 от 18.04.23 г.', 'Набор шаблонов  "Etalon" No 3 No20201487 от 18.04.23 г.', 
-                            'Шаблон универсальный сварщика УШС–3 No0783 от 18.04.23  г.', 'Магнитометр переносной ИМАГ-400Ц No2598 от 15.01.23 г.',]
-                }
+        case report_type.VCM.name:
+            res = { "tools" : tools}
             
-        case report_type.UTM.value:
-            res = { "tools" : ["Толщиномер УТ-11 ЛУЧ  №0518 от 20.03.23 г.", "Преобразователь ПЭП П112-5-10/2-Т-003 №5404 от 19.03.23 г.", "Номинальная частота контроля: 5 МГц; СОП №7448."],
-                    "ts" : [report.T1, report.T2, report.T3, report.T4, report.T5, report.T6, report.T7],
+        case report_type.UTM.name:
+            res = { "tools" : tools + ["Номинальная частота контроля: 5 МГц; СОП №7448."],
+                    "ts" : list(np.round([report.T1, report.T2, report.T3, report.T4, report.T5, report.T6, report.T7], 2)),
                     "minimal_ts" : [report.hardware.type.T1, report.hardware.type.T2, report.hardware.type.T3, report.hardware.type.T4, report.hardware.type.T5, report.hardware.type.T6, report.hardware.type.T7],
                     "sketch" : Reporter.get_image(session_db.scalars(select(Img.src).where(Img.id == report.hardware.type.sketch_UZT_id)).one_or_none())
                 }
             
-        case report_type.MPI.value:
-            res = { "tools" : ["Магнит постоянный ПМ-30 №0036", "Лампа УФ UV-Inspector 150 №20249", "СОП для МК №А40 (Условный уровень чувствительности А);", 
-                               "Магнитометр переносной ИМАГ-400Ц №2598 от 15.01.23 г.", 'Штангенциркуль "Калиброн" 0-150 №102201991 от 18.04.23 г.', 
-                               'Магнитный индикатор: люминесцентный магнитный концентрат для мокрого способа контроля 14А;', 'носитель на масляной основе Carrier II.'],
+        case report_type.MPI.name:
+            res = { "tools" : tools,
                     "sketch" : Reporter.get_image(session_db.scalars(select(Img.src).where(Img.id == report.hardware.type.sketch_MK_id)).one_or_none()),
                     "is_good" : report.MK_good,
                     "defects_position" : report.MK_comment,
                     "defects_description" : report.MK_comment
                 }
-        case report_type.HT.value:
-            res = { "tools" : ['Гидравлическая станция: Пневмогидростанция НС-7 зав.№:1553', 'Манометр высокого давления: Manotherm 316L NiFe S/N:191651768', 
-                               'Дублирующий манометр высокого давления: Manotherm 316L NiFe S/N:191651767'],
+        case report_type.HT.name:
+            res = { "tools" : tools,
                     # FIXME:Is it true?
-                   "actual_max_pressure" : report.hardware.type.max_pressure,
+                   "actual_max_pressure" : round(report.hardware.type.max_pressure, 2),
                    "is_good" : report.GI_preventor_good,
                     # FIXME: Which GI_*_sketch to print?
                     "sketch" : Reporter.get_image(session_db.scalars(select(Img.src).where(Img.id == report.GI_body_sketch_id)).one_or_none()),
                 }
+            
+    session_db.connection().close()
     return res
 
 # Custom types
@@ -84,7 +87,7 @@ class img(Enum):
     STAMP = 'Weatherford_stamp.png'
     SIGNATURE = 'ivanov_sign.png'
     
-@dataclass
+@dataclasses.dataclass
 class Report_Config:
     # (template_name, filename, parameters) 
     template: templates
@@ -92,31 +95,35 @@ class Report_Config:
     parameters: dict[str, str | None]
             
 # Main part
-def generate_config(report: Report)->list[Report_Config]:
+def generate_config(report: Report, with_facsimile: bool, with_stamp: bool)->list[Report_Config]:
     rep_types: list[report_type] = list(report.report_types)    # type: ignore
     session_db = get_session()
-    params_base: dict[str, Any] = {  "report_number" : f"{report.id}-",
-                    "date" : date_to_rus(report.checkup_date), # type: ignore
-                    "object_name" : report.hardware.type.name,
-                    "reg_number" : report.hardware.tape_number, 
-                    "serial_number" : report.hardware.serial_number, 
-                    "manufacturer" : report.hardware.type.manufacturer, 
-                    "batch_number" : report.hardware.type.batch_number, 
-                    "number_1C" : "-", 
-                    "location_and_kit_number" : report.hardware.unit.location, 
-                    "ambient_temp" : f"+{report.ambient_temp}" if report.ambient_temp > 0 else str(report.ambient_temp),
-                    "general_light" : str(report.total_light),
-                    "surf_light" : str(report.surface_light),
-                    "executor_position" : report.inspector.position,
-                    "identification" : report.inspector.certificate_number,
-                    "executor_name" : get_name(report.inspector.name),
-                    "facsimile" : Reporter.get_image(session_db.scalars(select(Img.src).where(Img.id == report.inspector.facsimile_id)).one_or_none())
-                }
+    params_base: dict[str, Any] = {  
+                                   "report_number" : f"{report.id}-",
+                                    "date" : date_to_rus(report.checkup_date), # type: ignore
+                                    "object_name" : report.hardware.type.name,
+                                    "reg_number" : report.hardware.tape_number, 
+                                    "serial_number" : report.hardware.serial_number, 
+                                    "manufacturer" : report.hardware.type.manufacturer, 
+                                    "batch_number" : report.hardware.type.batch_number, 
+                                    "number_1C" : "-", 
+                                    "location_and_kit_number" : report.hardware.unit.location, 
+                                    "ambient_temp" : f"+{report.ambient_temp}" if report.ambient_temp > 0 else str(report.ambient_temp),
+                                    "general_light" : str(report.total_light),
+                                    "surf_light" : str(report.surface_light),
+                                    "executor_position" : report.inspector.position,
+                                    "identification" : report.inspector.certificate_number,
+                                    "executor_name" : get_name(report.inspector.name),
+                                    "facsimile" : Reporter.get_image(session_db.scalars(select(Img.src).where(Img.id == report.inspector.facsimile_id)).one_or_none()) if with_facsimile else None, 
+                                    "with_stamp" : with_stamp
+                                }
+    session_db.connection().close()
     configs: list[Report_Config] = []
     for rep_type in rep_types:
         params = params_base | get_type_specific_params(report, rep_type)
-        filename = f'report_{report.id}_{rep_type.value}.pdf'
-        configs.append(Report_Config(template=templates[rep_type.value], filename=filename, parameters=params))
+        params['report_number'] = params['report_number'] + str(rep_type)
+        filename = f'report_{report.id}_{str(rep_type)}.pdf'
+        configs.append(Report_Config(template=templates[str(rep_type)], filename=filename, parameters=params))
     
     return configs
 
@@ -147,30 +154,79 @@ class Reporter:
             Reporter.__instance = self
     
     @classmethod
-    def get(cls, report_id: str | int) -> pathlib.PurePath | None:
+    def get(cls, report_id: str | int, with_facsimile: bool, with_stamp: bool) -> pathlib.PurePath | None:
+        """Generate report with report_id
+
+        Parameters
+        ----------
+        report_id : str | int
+            id in Reports table in the DB.
+        with_facsimile: bool
+            Generate with or without facsimile.
+        with_stamp: bool
+            Generate with or without stamp.
+
+        Returns
+        -------
+        pathlib.PurePath | None
+            path to a zip with report.
+        """
         session_db = get_session()
         try:
             report = session_db.scalars(select(Report).where(Report.id == int(report_id))).one()
             try:
-                current_app.logger.info('Creating report #%s for user #%s.', report_id, current_user.id, exc_info=True) # type: ignore
-                config = generate_config(report)
-                _, res = cls.__create_report(current_user.id, config, True) # type: ignore
+                current_app.logger.info('Creating report #%s for user #%s.', report_id, current_user.get_id(), exc_info=True) # type: ignore
+                config = generate_config(report, with_facsimile=with_facsimile, with_stamp=with_stamp)
+                _, res = cls.__create_report(current_user.get_id(), config, True) # type: ignore
                 return res
             except FileNotFoundError as e:
                 current_app.logger.critical('ALARM!!! %s', e, exc_info=True)
                 return None
+            finally:
+                session_db.connection().close()
         except (NoResultFound, MultipleResultsFound) as e:
             current_app.logger.error('Report_id is wrong: %s', e, exc_info=True)
+            session_db.connection().close()
             return None 
-        
-        
+        finally:
+            session_db.connection().close()
+    
+    @classmethod
+    def get_many(cls, report_ids: list[str | int], with_facsimile: bool, with_stamp: bool) -> pathlib.PurePath:
+        """Generate reports for ids in report_ids.
+
+        Parameters
+        ----------
+        report_ids : list[str  |  int]
+            list of ids.
+        with_facsimile: bool
+            Generate with or without facsimile.
+        with_stamp: bool
+            Generate with or without stamp.
+
+        Returns
+        -------
+        pathlib.PurePath | None
+            path to a zip with reports.
+        """
+        reports_path = [cls.get(id, with_facsimile=with_facsimile, with_stamp=with_stamp) for id in report_ids]
+        cls.__mk_if_not_exist(pathlib.PurePath(cls.storage_dir, 'request'))
+        output_zip = pathlib.PurePath(cls.storage_dir, 'request', f'{uuid.uuid1()}.zip')
+        current_app.logger.info('Generated reports  and now will pack it to one zip file.')
+        with ZipFile(output_zip, 'w') as report_zip:
+            for rep_path in reports_path:
+                if rep_path is not None:
+                    report_zip.write(rep_path, arcname=rep_path.name) 
+        current_app.logger.info('Successfully packed reports zip to one zip file.')
+        return output_zip
+           
     @classmethod    
     def get_image(cls, image: img | str | os.PathLike | None) -> str | None:
         weatherford_logo = None
         if image is None:
             current_app.logger.info('No images cause i did not find file None was passed', exc_info=True)
             return None
-        filename: pathlib.PurePath = pathlib.PurePath(cls.storage_dir, 'templates', image.value) if type(image) is img else pathlib.PurePath(str(image))
+        filename: pathlib.PurePath = pathlib.PurePath(cls.templates_dir, image.value) if type(image) is img else pathlib.PurePath(str(image))
         if not os.path.isfile(filename):
             current_app.logger.warning('No images cause i did not find file %s', filename, exc_info=True)
             return None
@@ -215,9 +271,11 @@ class Reporter:
         cls.__mk_if_not_exist(pdf_folder)
         
         logo = cls.get_image(img.LOGO)
-        stamp = cls.get_image(img.STAMP)
+        stamp = cls.get_image(img.STAMP) if config[0].parameters.get('with_stamp') is True else None
         outputs: list[tuple[templates, pathlib.PurePath]] = []
-        for template_name, filename, params in map(lambda _: dataclasses.astuple(_), config):
+        
+        def task(config_tuple):
+            template_name, filename, params = config_tuple
             template = env.get_template(template_name.value)
             html_file_path = pathlib.PurePath(cls.storage_dir, 'html', folder_name, f'report_{template_name.value}')
             with open(html_file_path, 'w') as html_file:
@@ -225,13 +283,17 @@ class Reporter:
         
             output_file_path = pathlib.PurePath(cls.storage_dir, 'pdf', folder_name, filename)
             HTML(str(html_file_path)).write_pdf(str(output_file_path))
-            outputs.append((template_name, output_file_path))
-
+            return (template_name, output_file_path)
+        
+        with ThreadPool() as pool:
+            for output in pool.imap(task, list(map(lambda x: dataclasses.astuple(x), config))):
+                outputs.append(output)
+            
         output_zip = None
         if zip_files:
             output_zip = pathlib.PurePath(cls.storage_dir, 'pdf', folder_name, f'{request_id}.zip')
             with ZipFile(output_zip, 'w') as report_zip:
                 for _, output in outputs:
                     report_zip.write(output, arcname=output.name)
-        
         return outputs, output_zip
+    
