@@ -121,7 +121,7 @@ class Cat_form(Form):
 class Hardware_form(Form):
     owner = SelectField('Компания владелец')
     setup = SelectField('Установка')
-    tape_number = StringField('Номер бандажной ленты', validators=[validators.Optional(), validators.Length(max=150)])
+    tape_number = StringField('Номер бандажной ленты', validators=[validators.Length(max=150)])
     serial_number = StringField('Серийный номер', validators=[validators.Optional(), validators.Length(max=150)])
     commissioned = DateField('Дата ввода в эксплуатацию')
     batch_number = StringField('Партийный номер', validators=[validators.Optional(), validators.Length(max=150)])

@@ -44,7 +44,7 @@ def form_json(session_db, model, form_dict_func, check_role_func, filter_dict: d
 
     objs = session_db.scalars(selected).all()
     objs = [form_dict_func(obj) for obj in objs]
-        
+    session_db.connection().close()    
     return {'data': objs}
 
 def form_server_side_json(session_db, model, form_dict_func, check_role_func, where_clause, filter_dict: dict={}):

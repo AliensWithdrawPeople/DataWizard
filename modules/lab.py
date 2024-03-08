@@ -54,7 +54,7 @@ def users_json():
     
     users = session_db.scalars(selected).all()
     users = [form_user_dict(user) for user in users]
-        
+    session_db.connection().close()
     return {'data': users}
 
 @lab.route("/lab/users/add", methods=('GET', 'POST'))
@@ -81,6 +81,7 @@ def add_user():
         session_db = get_session()
         session_db.add(user)
         session_db.commit()
+        session_db.connection().close()
         current_app.logger.info('User #%s was successfully added.', user.id, exc_info=True)
         return redirect(url_for(sidebar_urls['Lab.users']))
     
@@ -100,6 +101,7 @@ def edit_user(id):
     
     session_db = get_session()
     user_obj = session_db.scalars(select(Models.User).where(Models.User.id == edit_id)).one_or_none()
+    session_db.connection().close()
     if(user_obj is None):
         raise RuntimeError('edit_user: user_obj is none')
         

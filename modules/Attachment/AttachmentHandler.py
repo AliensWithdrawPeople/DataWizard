@@ -66,6 +66,7 @@ class AttachmentHandler:
         img.src = str(path)
         img_id = img.id
         session_db.commit()
+        session_db.connection().close()
         session_db.close()
         return int(img_id)
     
@@ -97,6 +98,7 @@ class AttachmentHandler:
         except NoResultFound:
             raise ValueError(f'img_id ={img_id} is not valid.')
         path = PurePath(img.src)
+        session_db.connection().close()
         session_db.close()
         
         if not os.path.isfile(path):

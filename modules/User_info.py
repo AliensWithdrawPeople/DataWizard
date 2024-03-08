@@ -18,19 +18,21 @@ class User_info:
         session = get_session()
         self._user = session.scalars(select(Models.User).where(Models.User.id == id)).one()
         self._is_good = True
+        session.connection().close()
         
     @staticmethod
     def check_and_load(email: str, password: str):
         session = get_session()
         users = list(session.scalars(select(Models.User).where(Models.User.email == email)).all())
         users = [user for user in users if pbkdf2_sha256.verify(password, user.password)]
-        
+        session.connection().close()
         return User_info(str(users[0].id)) if len(users) == 1 else None
         
     @staticmethod
     def get(user_id: str):
         session = get_session()
         is_exist = session.query(exists().where(Models.User.id == user_id)).scalar()
+        session.connection().close()
         return User_info(user_id) if is_exist else None
     
     @property

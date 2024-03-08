@@ -2,6 +2,7 @@ from flask import Blueprint, redirect, render_template, request, send_from_direc
 from flask_login import login_required, current_user
 from modules.Attachment.AttachmentHandler import AttachmentHandler
 from sqlalchemy import or_, select 
+from sqlalchemy.exc import MultipleResultsFound, NoResultFound
 
 from .db_connecter import get_session
 from . import Models
@@ -26,6 +27,7 @@ def orgs():
     session_db = get_session()
     selected = select(Models.Company.name).join_from(Models.Unit, Models.Company).distinct()
     companies = list(session_db.scalars(selected).all())
+    session_db.connection().close()
     return render_template('organizations.html', is_admin=is_admin, username=username, sidebar_urls=sidebar_urls, companies=companies)
 
 @organizations.route("/api/data/companies")
@@ -62,9 +64,11 @@ def add_company(id=None):
         session_db = get_session()
         obj = session_db.scalars(select(Models.Company).where(Models.Company.id == str(id))).one_or_none()
         if(obj is None):
+            session_db.connection().close()
             raise RuntimeError('edit_company: obj is none')
         form.name.data = obj.name
         add_or_edit = 'Редактировать'
+        session_db.connection().close()
         return render_template('add_company.html', is_admin=is_admin, username=username, sidebar_urls=sidebar_urls, add_or_edit=add_or_edit, form=form)
         
     if request.method == 'POST' and form.validate():
@@ -88,6 +92,7 @@ def add_company(id=None):
             current_app.logger.info('Company #%s was successfully added.', obj.id, exc_info=True)
             
         session_db.commit()
+        session_db.connection().close()
         return redirect(url_for(sidebar_urls['Organizations']))
     
     return render_template('add_company.html', is_admin=is_admin, username=username, sidebar_urls=sidebar_urls, add_or_edit=add_or_edit, form=form)
@@ -98,7 +103,15 @@ def send_logo(id):
     check_inspector()
     check_id(id, 'Organizations')
     session_db = get_session()
-    logo_id = session_db.scalars(select(Models.Company.logo_id)).one_or_none()
+    current_app.logger.info(f'Requested logo_id = {id}')
+    try:
+        logo_id = session_db.scalars(select(Models.Company.logo_id).where(Models.Company.logo_id == id)).one()
+    except (MultipleResultsFound, NoResultFound) as e: 
+        current_app.logger.warning("Can't find logo_id for company_id = %s cause %s", id, e, exc_info=True)
+        logo_id = None
+    finally:
+        session_db.connection().close()
+    current_app.logger.info(f'Found logo with logo_id = {id}')
     default_res = send_from_directory("C:/work/DataWizard/static/img/", "tiny_logo.png") 
     if not logo_id is None:
         try:
