@@ -119,12 +119,21 @@ def add_hardware(id=None):
         return render_template('add_tool.html', is_admin=is_admin, username=username, sidebar_urls=sidebar_urls, add_or_edit=add_or_edit, form=form)
     
     try:
-        is_unique_batch_number = session_db.scalars(select(Models.Catalogue.id).where(Models.Catalogue.batch_number == form.batch_number.data)).one() is None
-    except (NoResultFound, MultipleResultsFound) as e:
+        is_unique_tape_number = session_db.scalars(select(Models.Hardware.id).where(Models.Hardware.tape_number == form.tape_number.data)).one() is None
+    except MultipleResultsFound as e:
         current_app.logger.warn('Houston, we have a trouble with obtaining data from DB: %s', e, exc_info=True)
-        is_unique_batch_number = False
+        is_unique_tape_number = False
+    except NoResultFound as e:
+        is_unique_tape_number = True
         
-    if request.method == 'POST' and form.validate() and is_unique_batch_number:
+    # TODO: Add info banner to the screen about uniqueness of tape number.
+    if not is_unique_tape_number:
+        tmp = list(form.tape_number.errors)
+        tmp.append("Номер бандажной ленты должен быть уникальным.")
+        form.tape_number.errors = tuple(tmp)
+        print(form.tape_number.errors)
+        
+    if request.method == 'POST' and form.validate() and is_unique_tape_number:
         current_app.logger.info('Hardware/tape_number = #%s', form.tape_number.data, exc_info=True)
         data = {
             'company_id': form.owner.data,
@@ -164,6 +173,7 @@ def get_hardware_type_info(batch_number=None):
         return {}
     current_app.logger.info('Hardware type info accessed; batch number = %s', str(batch_number), exc_info=True)
     res = {
+        'type-batch_number' : hardware_type.batch_number,
         'type-name': hardware_type.name,
         'type-comment': hardware_type.comment,
         'type-manufacturer': hardware_type.manufacturer,
