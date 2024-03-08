@@ -17,12 +17,13 @@ method_python_enum = Enum('method_python_enum', ['ВИК', 'УЗТ', 'УК', 'М
 
 report_type_postgres = ENUM('VCM', 'UTM', 'MPI', 'HT', name='report_type_postgres', create_type=False)
 
+# Value of report_type is key to method_enum!!!
 class report_type(Enum):
-    VCM = 'VCM'
-    UTM = 'UTM'
-    MPI = 'MPI'
-    HT = 'HT'
-
+    VCM = 'ВИК'
+    UTM = 'УЗТ'
+    MPI = 'МК'
+    HT = 'ГИ'
+    
 class Base(DeclarativeBase):
     pass
 
