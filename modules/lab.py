@@ -80,9 +80,10 @@ def add_user():
         ) 
         session_db = get_session()
         session_db.add(user)
+        session_db.flush()
         session_db.commit()
-        session_db.connection().close()
         current_app.logger.info('User #%s was successfully added.', user.id, exc_info=True)
+        session_db.connection().close()
         return redirect(url_for(sidebar_urls['Lab.users']))
     
     username = current_user.get_name() # type: ignore
