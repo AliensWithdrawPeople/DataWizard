@@ -335,6 +335,7 @@
         multiple_tests : multiple_tests_fields_names
     };
 
+
     // Check out the top answer here: https://stackoverflow.com/questions/56849253/efficient-way-to-request-back-end-for-data-on-input-change
     // Returns a function, that, as long as it continues to be invoked, will not
     // be triggered. The function will be called after it stops being called for
@@ -354,7 +355,6 @@
             if (callNow) func.apply(context, args);
         };
     };
-
 
     document.getElementById('tape_number').addEventListener('change', debounce(function(e){
         const hardware_info_url = {{ url_for(sidebar_urls["Reports.load_hardware_data_from_DB"], tape_number='') |tojson }} + e.target.value;
@@ -418,6 +418,31 @@
             }
         });
     };
+
+    function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+    }
+    function fire_change(element) {
+        if ("createEvent" in document) {
+            var evt = document.createEvent("HTMLEvents");
+            evt.initEvent("change", false, true);
+            element.dispatchEvent(evt);
+        }
+        else
+            element.fireEvent("onchange");
+    }
+    // If something is prefilled from the backend, it will fire scripts to calculate everything here.
+    {% if trigger_change %}
+    sleep(500).then(() => { 
+        var event = new Event('change');
+        fire_change(document.getElementById('tape_number'));
+        ts.forEach(item => { fire_change(document.getElementById(item)); });
+        for (const key of Object.keys(rep_parts)) {
+        fire_change(document.getElementById(key));
+        }
+    });
+
+    {% endif %}
 
 </script>
 {% endblock %}

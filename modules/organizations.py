@@ -1,13 +1,14 @@
 from flask import Blueprint, redirect, render_template, request, send_from_directory, url_for, current_app
 from flask_login import login_required, current_user
 from modules.Attachment.AttachmentHandler import AttachmentHandler
+from numpy import flip
 from sqlalchemy import or_, select 
 from sqlalchemy.exc import MultipleResultsFound, NoResultFound
 
 from .db_connecter import get_session
 from . import Models
 
-from .aux_scripts.form_dict import form_organization_dict, form_unit_dict, form_json
+from .aux_scripts.form_dict import form_organization_dict, form_server_side_json, form_unit_dict, form_json
 from .aux_scripts.Templates_params import sidebar_urls
 from .aux_scripts.forms import Company_form, Unit_form
 from .aux_scripts.check_role import check_id, check_inspector
@@ -34,13 +35,28 @@ def orgs():
 @login_required
 def organizations_json():
     current_app.logger.info('Loading %s', '/api/data/companies', exc_info=True)
-    return form_json(get_session(), Models.Company, form_organization_dict, check_inspector)
+    json = form_json(get_session(), Models.Company, form_organization_dict, check_inspector)
+    return json
 
 @organizations.route("/api/data/units")
 @login_required
 def units_json():
     current_app.logger.info('Loading %s', "/api/data/units", exc_info=True)
-    return form_json(get_session(), Models.Unit, form_unit_dict, check_inspector)
+    def owner_filter(selected, model, filter_val):
+        selected = selected.join_from(model, Models.Company)
+        if not filter_val is None and filter_val.strip().lower() != 'все':
+            selected = selected.where(Models.Company.name == filter_val)
+        return selected
+    filter_dict = {
+        'filter': owner_filter,
+    }
+    search_clause = lambda search_val: or_(
+        Models.Unit.location.like(f'%{search_val}%'),
+        Models.Unit.sector.like(f'%{search_val}%'),
+        Models.Unit.setup_name.like(f'%{search_val}%'),
+        )
+    json = form_server_side_json(get_session(), Models.Unit, form_unit_dict, check_inspector, search_clause, filter_dict)
+    return json
 
 
 @organizations.route("/clients/company/add", methods=('GET', 'POST'))
@@ -155,12 +171,14 @@ def add_unit(id=None):
 
     form.company_name.choices = [(key, val) for (key, val) in companies]
     form.supervisor_name.choices = [(key, val) for (key, val) in supervisors]
-            
     if not id is None and not fill_from_form is True:  
         obj = session_db.scalars(select(Models.Unit).where(Models.Unit.id == str(id))).one_or_none()
         if(obj is None):
             raise RuntimeError('edit_unit: obj is none')
-        form.company_name.data = obj.company.name
+        print("unit's company_name = ", obj.company.name, flush=True)
+        form.company_name.data = obj.company.id
+        # form.company_name.default = obj.company.id
+
         form.location.data = obj.location
         form.setup_name.data = obj.setup_name
         form.sector.data = obj.sector

@@ -38,7 +38,7 @@ class Company(Base):
     id = mapped_column(Integer, primary_key=True, nullable=False)
     name = mapped_column(VARCHAR(100))
     logo_id = mapped_column(Integer, ForeignKey('images.id'), nullable=True)
-    units: Mapped[List["Unit"]] = relationship("Unit", back_populates="company")
+    units: Mapped[List["Unit"]] = relationship("Unit", back_populates="company", cascade="all, delete-orphan")
     
 class Unit(Base):
     __tablename__ = 'units'

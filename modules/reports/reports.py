@@ -4,6 +4,7 @@ from flask_login import login_required, current_user
 from modules.Attachment.AttachmentHandler import AttachmentHandler
 from modules.ReportForge.reporter import Reporter
 from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 from sqlalchemy.exc import NoResultFound, MultipleResultsFound
 from wtforms import FileField
 
@@ -173,6 +174,7 @@ def add_report(id=None):
     req_form = request.form
     
     form = Report_form(req_form)
+    # form = Report_form()
     with get_session() as session:
         inspectors = list(session.execute(select(Models.User.id, Models.User.name).where(Models.User.role.in_(('admin', 'inspector')))).all())
     inspectors = [tuple(_) for _ in inspectors]
@@ -186,11 +188,11 @@ def add_report(id=None):
     
     if not id is None and not fill_from_form is True:  
         with get_session() as session:
-            report_obj = session.scalars(select(Models.Report).where(Models.Report.id == str(id))).one_or_none()
+            report_obj = session.scalars(select(Models.Report).where(Models.Report.id == str(id)).options(joinedload('*'))).unique().one_or_none()
         if(report_obj is None):
             current_app.logger.exception('RuntimeError: report_obj #%s is none.', id, exc_info=True)
             return redirect(url_for(sidebar_urls['Reports.reports']))
-        
+
         if not report_obj.checkup_date is None:
             form.checkup_date.data = datetime.datetime.strptime(str(report_obj.checkup_date), "%Y-%m-%d").date()
         form.inspector.data = report_obj.inspector.name
@@ -200,45 +202,45 @@ def add_report(id=None):
         form.tape_number.data = report_obj.hardware.tape_number
         
         
-        def fill_fields(fields: tuple, obj):
-            for field in fields:
-                if hasattr(obj, field.name) and type(field) is not FileField:
-                    field = obj.__getattribute__(field.name)
-                    
+        def fill_fields(fields_names: list, obj):
+            for field_name in fields_names:
+                if hasattr(obj, field_name) and type(form.__getattribute__(field_name)) is not FileField:
+                    form.__getattribute__(field_name).data = obj.__getattribute__(field_name)
+
         form.VIC.data = report_obj.visual_good is not None
         if report_obj.visual_good is not None:
-            fill_fields(form.vic_fields, report_obj)
+            fill_fields(form.vic_fields_names, report_obj) # type: ignore
                
         form.UZT.data = report_obj.UZT_good is not None 
         if report_obj.T1 is not None:
-            fill_fields(form.uzt_fields, report_obj)
+            fill_fields(form.uzt_fields_names, report_obj) # type: ignore
                 
         form.UK.data = report_obj.UK_good is not None
         if report_obj.UK_good is not None:
-            fill_fields(form.uk_fields, report_obj)        
+            fill_fields(form.uk_fields_names, report_obj) # type: ignore       
         
         form.MK.data = report_obj.MK_good is not None
         if report_obj.MK_good is not None:
-            fill_fields(form.mk_fields, report_obj)    
+            fill_fields(form.mk_fields_names, report_obj) # type: ignore
             
         form.Hydro.data = report_obj.hydro_result is not None
         if report_obj.hydro_result is not None:
-            fill_fields(form.hydro_fields, report_obj)    
+            fill_fields(form.hydro_fields_names, report_obj) # type: ignore   
             
         form.Hydro_preventer.data = report_obj.GI_preventor_good is not None
         if report_obj.hydro_result is not None:
-            fill_fields(form.hydro_preventer_fields, report_obj)
+            fill_fields(form.hydro_preventer_fields_names, report_obj) # type: ignore
         
-        form.calibration.data = report_obj.double_test is not None
+        form.calibration.data = report_obj.calibration_pressure is not None
         if report_obj.calibration_pressure is not None:
-            fill_fields(form.calibration_fields, report_obj)
+            fill_fields(form.calibration_fields_names, report_obj) # type: ignore
             
-        form.multiple_tests.data = report_obj.double_test is not None
+        form.multiple_tests.data = (report_obj.double_test or report_obj.one_and_a_fifth_test or report_obj.one_and_a_half_test)
         if report_obj.double_test is not None:
-            fill_fields(form.multiple_tests_fields, report_obj)
+            fill_fields(form.multiple_tests_fields_names, report_obj) # type: ignore
                  
         add_or_edit = 'Редактировать'
-        return render_template('add_report.html', is_admin=is_admin, username=username, sidebar_urls=sidebar_urls, add_or_edit=add_or_edit, form=form)
+        return render_template('add_report.html', is_admin=is_admin, username=username, sidebar_urls=sidebar_urls, add_or_edit=add_or_edit, form=form, trigger_change=True)
     
     print("form.validate() =", form.validate(), 'request.method =', request.method)     
     if request.method == 'POST' and form.validate():
