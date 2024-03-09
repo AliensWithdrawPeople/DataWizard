@@ -130,8 +130,8 @@ def coerce_bool(x):
     if isinstance(x, str):
         return x == "True" if x != "None" else None
     else:
-        return bool(x) if x is not None else None
-    
+        return bool(x) if x is not None else None  
+
 class Report_form(Form):
     checkup_date = DateField('Дата контроля')
     next_checkup_date = DateField('Дата следующего контроля')
@@ -156,9 +156,8 @@ class Report_form(Form):
 # class VIC_Report_form(Form):
     VIC = BooleanField('ВИК')
     visual_good = SelectField('Пригодность', 
-                                choices=[(None, ""), (True, 'годен'), (False, 'негоден')], 
+                                choices=[(None, ""), (True, 'годен'), ('False', 'негоден')], 
                                 coerce=coerce_bool, # type: ignore
-                                validators=[RequiredIf(other_field_name='VIC', message='Выберите значение')],
                                 render_kw={'readonly':True, 'disabled':'disabled'})
     visual_comment = TextAreaField('Комментарий', validators=[validators.Length(max=300)], render_kw={'readonly':True, 'disabled':'disabled'})
     vic_fields = visual_good, visual_comment
@@ -184,7 +183,6 @@ class Report_form(Form):
     UZT_good = SelectField('Пригодность', 
                             choices=[(None, ""), (True, 'годен'), (False, 'негоден')], 
                             coerce=coerce_bool, # type: ignore
-                            validators=[RequiredIf(other_field_name='UZT', message='Выберите значение')],
                             render_kw={'readonly':True, 'disabled':'disabled'})
     residual = DecimalField('Остаточный ресурс, мм', validators=[RequiredIf(other_field_name='UZT', message='Выберите значение')], render_kw={'readonly': True})
     uzt_fields = T1, T2, T3, T4, T5, T6, T7, UZT_good, residual
@@ -195,7 +193,6 @@ class Report_form(Form):
     UK_good = SelectField('Пригодность', 
                             choices=[(None, ""), (True, 'годен'), (False, 'негоден')], 
                             coerce=coerce_bool, # type: ignore
-                            validators=[RequiredIf(other_field_name='UK', message='Выберите значение')], 
                             render_kw={'readonly':True, 'disabled':'disabled'})
     UK_comment = TextAreaField('Комментарий', validators=[validators.Length(max=300)], render_kw={'readonly':True, 'disabled':'disabled'})
     uk_fields = UK_good, UK_comment
@@ -206,7 +203,6 @@ class Report_form(Form):
     MK_good = SelectField('Пригодность', 
                             choices=[(None, ""), (True, 'годен'), (False, 'негоден')], 
                             coerce=coerce_bool, # type: ignore
-                            validators=[RequiredIf(other_field_name='MK', message='Выберите значение')], 
                             render_kw={'readonly':True, 'disabled':'disabled'}) 
     MK_comment = TextAreaField('Комментарий', validators=[validators.Length(max=300)], render_kw={'readonly':True, 'disabled':'disabled'})
     mk_fields = MK_good, MK_comment
@@ -217,7 +213,6 @@ class Report_form(Form):
     Hydro_good = SelectField('Пригодность', 
                             choices=[(None, ""), (True, 'годен'), (False, 'негоден')], 
                             coerce=coerce_bool, # type: ignore
-                            validators=[RequiredIf(other_field_name='Hydro', message='Выберите значение')], 
                             render_kw={'readonly':True, 'disabled':'disabled'}) 
     stage1 = DecimalField('Этап 1, МПа', render_kw={'readonly':True, 'disabled':'disabled'})
     stage2 = DecimalField('Этап 2, МПа', render_kw={'readonly':True, 'disabled':'disabled'})

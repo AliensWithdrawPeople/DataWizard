@@ -116,7 +116,8 @@ def add_hardware(id=None):
         if not hardware_obj.commissioned is None:
             form.commissioned.data = datetime.datetime.strptime(str(hardware_obj.commissioned), "%Y-%m-%d").date()
         add_or_edit = 'Редактировать'
-        return render_template('add_tool.html', is_admin=is_admin, username=username, sidebar_urls=sidebar_urls, add_or_edit=add_or_edit, form=form)
+        return render_template('add_hardware.html', is_admin=is_admin, username=username, sidebar_urls=sidebar_urls, add_or_edit=add_or_edit, form=form, 
+                               type_form=type_form, trigger_change=True)
     
     try:
         is_unique_tape_number = session_db.scalars(select(Models.Hardware.id).where(Models.Hardware.tape_number == form.tape_number.data)).one() is None
@@ -137,7 +138,7 @@ def add_hardware(id=None):
         current_app.logger.info('Hardware/tape_number = #%s', form.tape_number.data, exc_info=True)
         data = {
             'company_id': form.owner.data,
-            'unit_id': session_db.scalars(select(Models.Unit.id).where(Models.Unit.setup_name == form.setup.data)).one_or_none(),
+            'unit_id': session_db.scalars(select(Models.Unit.id).where(Models.Unit.id == form.setup.data)).one_or_none(),
             'catalogue_id': session_db.scalars(select(Models.Catalogue.id).where(Models.Catalogue.batch_number == form.batch_number.data)).one_or_none(),
             'tape_number': form.tape_number.data,
             'serial_number': form.serial_number.data,

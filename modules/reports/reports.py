@@ -195,6 +195,8 @@ def add_report(id=None):
 
         if not report_obj.checkup_date is None:
             form.checkup_date.data = datetime.datetime.strptime(str(report_obj.checkup_date), "%Y-%m-%d").date()
+        if not report_obj.next_checkup_date is None:
+            form.next_checkup_date.data = datetime.datetime.strptime(str(report_obj.next_checkup_date), "%Y-%m-%d").date()
         form.inspector.data = report_obj.inspector.name
         form.ambient_temp.data = report_obj.ambient_temp
         form.total_light.data = report_obj.total_light

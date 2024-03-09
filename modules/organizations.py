@@ -213,3 +213,19 @@ def add_unit(id=None):
         return redirect(url_for(sidebar_urls['Organizations']))
     
     return render_template('add_unit.html', is_admin=is_admin, username=username, sidebar_urls=sidebar_urls, add_or_edit=add_or_edit, form=form)    
+
+@organizations.route("/api/data/get_units/<org_id>", methods=('GET', 'POST')) # type: ignore
+@login_required
+def get_units(org_id):
+    if not org_id is None:  
+        session_db = get_session()
+        try:
+            units = session_db.scalars(select(Models.Unit).where(Models.Unit.company_id == org_id)).all()
+            session_db.close()
+            current_app.logger.info(f'Returning units for company_id = {org_id}.')
+            return {unit.id : str(unit.setup_name) for unit in units}
+        except Exception as e:
+            current_app.logger.exception(f'While loading units for company_id = {org_id}, shit happened: {str(e)}', exc_info=True)
+            session_db.close()
+    return {}
+    

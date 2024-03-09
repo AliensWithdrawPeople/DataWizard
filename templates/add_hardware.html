@@ -149,5 +149,45 @@
                 });
             });
     }, 500));
+
+    document.getElementById('owner').addEventListener('change', debounce(function(e){
+        const type_info_url = {{ url_for(sidebar_urls["Organizations.load_units_from_DB"], org_id='') |tojson }} + e.target.value;
+        fetch(type_info_url)
+            .then(res => res.json())
+            .then((res) => {
+                const data = res.data;
+                const x = document.getElementById('setup');
+                console.log('owner =', type_info_url);
+                while (x.length > 0) {
+                    x.remove(x.length-1);
+                }
+                Object.entries(res).forEach(([key, value]) => {
+                    const option = document.createElement("option");
+                    option.value = key;
+                    option.text = value;
+                    x.add(option);
+                });
+            });
+    }, 200));
+
+    function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+    }
+    function fire_change(element) {
+        if ("createEvent" in document) {
+            var evt = document.createEvent("HTMLEvents");
+            evt.initEvent("change", false, true);
+            element.dispatchEvent(evt);
+        }
+        else
+            element.fireEvent("onchange");
+    }
+    // If something is prefilled from the backend, it will fire scripts to calculate everything here.
+    {% if trigger_change %}
+    sleep(500).then(() => { 
+        var event = new Event('change');
+        fire_change(document.getElementById('batch_number'));
+    });
+    {% endif %}
 </script>
 {% endblock %}

@@ -18,6 +18,7 @@ sidebar_urls = {
     'Organizations.edit_org' : "organizations.edit_company",
     'Organizations.add_unit' : "organizations.add_unit",
     'Organizations.edit_unit' : "organizations.edit_unit",
+    'Organizations.load_units_from_DB' : "organizations.get_units",
     
     # Reports section
     'Reports.cat' : "base_report.catalogue.cat",
