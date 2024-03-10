@@ -52,7 +52,7 @@ class Unit(Base):
     
     company: Mapped[Company] = relationship("Company", back_populates="units")
     supervisor: Mapped["User"] = relationship("User", back_populates="units")
-    hardwares: Mapped[List["Hardware"]] = relationship("Hardware", back_populates="unit")
+    hardwares: Mapped[List["Hardware"]] = relationship("Hardware", back_populates="unit", cascade="all, delete-orphan")
     
 class User(Base):
     __tablename__ = "users"
@@ -72,7 +72,7 @@ class User(Base):
     reports: Mapped[List['Report']] = relationship('Report', back_populates='inspector') 
     
     certificate_scan_id = mapped_column(Integer, ForeignKey('images.id'), nullable=True)
-    facsimile_id = mapped_column(Integer, ForeignKey('images.id'), nullable=True)
+    facsimile_id = mapped_column(Integer, ForeignKey('images.id'), nullable=True,)
     
     def __repr__(self) -> str:
         return f"User(id={self.id!r}, name={self.name!r}, role={self.role!r})"

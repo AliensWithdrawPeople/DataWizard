@@ -1,7 +1,7 @@
 from .. import Models
 from flask import request, url_for, current_app
 from sqlalchemy import select
-
+from sqlalchemy.orm import joinedload
 
 def form_json(session_db, model, form_dict_func, check_role_func, filter_dict: dict={}):
     """JSON for a client side table
@@ -47,7 +47,7 @@ def form_json(session_db, model, form_dict_func, check_role_func, filter_dict: d
     session_db.connection().close()    
     return {'data': objs}
 
-def form_server_side_json(session_db, model, form_dict_func, check_role_func, where_clause, filter_dict: dict={}):
+def form_server_side_json(session_db, model, form_dict_func, check_role_func, where_clause, filter_dict: dict={}, joinload_models = []):
     """JSON for a server side table
 
     Parameters
@@ -92,8 +92,10 @@ def form_server_side_json(session_db, model, form_dict_func, check_role_func, wh
     # search
     search = request.args.get('search[value]')
     if search:
+        if joinload_models:
+            selected = selected.options(joinedload(*joinload_models))
         selected = selected.where(where_clause(search))
-    total_filtered = len(session_db.scalars(selected).all())
+    total_filtered = len(session_db.scalars(selected).unique().all())
     
     # TODO: sorting
 

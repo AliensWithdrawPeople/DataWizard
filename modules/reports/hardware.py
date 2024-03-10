@@ -59,15 +59,16 @@ def hardware_json():
         'location_filter': location_filter
     }
     search_clause = lambda search_val: or_(
-        Models.Hardware.type.name.like(f'%{search_val}%'),
-        Models.Hardware.type.comment.like(f'%{search_val}%'),
-        Models.Hardware.type.type.batch_number.like(f'%{search_val}%'),
-        Models.Hardware.type.serial_number.like(f'%{search_val}%'),
-        Models.Hardware.type.tape_number.like(f'%{search_val}%'),
-        Models.Hardware.type.unit.company.name.like(f'%{search_val}%'),
-        Models.Hardware.type.unit.setup_name.like(f'%{search_val}%'),
+        Models.Hardware.type.has(Models.Catalogue.name.like(f'%{search_val}%')),
+        Models.Hardware.type.has(Models.Catalogue.name.like(f'%{search_val}%')),
+        Models.Hardware.type.has(Models.Catalogue.comment.like(f'%{search_val}%')),
+        Models.Hardware.type.has(Models.Catalogue.batch_number.like(f'%{search_val}%')),
+        Models.Hardware.serial_number.like(f'%{search_val}%'),
+        Models.Hardware.tape_number.like(f'%{search_val}%'),
+        Models.Hardware.unit.has(Models.Unit.company.has(Models.Company.name.like(f'%{search_val}%'))),
+        Models.Hardware.unit.has(Models.Unit.setup_name.like(f'%{search_val}%')),
         )
-    json = form_server_side_json(get_session(), Models.Hardware, form_hardware_dict, lambda: True, search_clause, filter_dict)
+    json = form_server_side_json(get_session(), Models.Hardware, form_hardware_dict, lambda: True, search_clause, filter_dict, [Models.Hardware.type])
     return json
 
 

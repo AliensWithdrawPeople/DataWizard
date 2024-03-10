@@ -3,7 +3,7 @@ from flask import Blueprint, current_app, redirect, render_template, request, se
 from flask_login import login_required, current_user
 from modules.Attachment.AttachmentHandler import AttachmentHandler
 from modules.ReportForge.reporter import Reporter
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from sqlalchemy.orm import joinedload
 from sqlalchemy.exc import NoResultFound, MultipleResultsFound
 from wtforms import FileField
@@ -75,13 +75,10 @@ def reports_json():
         'location_filter': location_filter,
         'checkup_date_filter': checkup_date_filter
     }
-    # FIXME: Wrong search in parents.
-    search_clause = lambda search_val: None
-        # or_(
-        # Models.Report.checkup_date.like(f'%{search_val}%'),
-        # Models.Report.hardware.tape_number.like(f'%{search_val}%')
-        # )
-    json = form_server_side_json(get_session(), Models.Report, form_report_dict, lambda: True, None, filter_dict)
+    search_clause = lambda search_val: or_(
+        Models.Report.hardware.has(Models.Hardware.tape_number.like(f'%{search_val}%'))
+        )
+    json = form_server_side_json(get_session(), Models.Report, form_report_dict, lambda: True, search_clause, filter_dict, [Models.Report.hardware])
     return json
 
 @reports.route('/api/reporter/get', methods=('GET', 'POST'))
