@@ -182,7 +182,7 @@ def add_unit(id=None):
         form.location.data = obj.location
         form.setup_name.data = obj.setup_name
         form.sector.data = obj.sector
-        form.supervisor_name.data = obj.supervisor.name
+        form.supervisor_name.data = obj.supervisor_id
         add_or_edit = 'Редактировать'
         return render_template('add_unit.html', is_admin=is_admin, username=username, sidebar_urls=sidebar_urls, add_or_edit=add_or_edit, form=form)
         

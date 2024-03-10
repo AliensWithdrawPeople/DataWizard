@@ -80,7 +80,7 @@ class Unit_form(Form):
     location = StringField('Место дислокации', validators=[validators.Optional()])
     setup_name = StringField('Номер установки')
     sector = StringField('Участок')
-    supervisor_name = SelectField('Ответственный') # type:ignore
+    supervisor_name = SelectField('Ответственный', coerce=int) # type:ignore
     
 class Cat_form(Form):
     name = StringField('Наименование', validators=[validators.DataRequired(), validators.Length(max=150)])
@@ -119,8 +119,8 @@ class Cat_form(Form):
     max_pressure = DecimalField('Максимальное рабочее давленее, МПа', validators=[validators.Optional()])
     
 class Hardware_form(Form):
-    owner = SelectField('Компания владелец')
-    setup = SelectField('Установка')
+    owner = SelectField('Компания владелец', coerce=int)
+    setup = SelectField('Установка', coerce=int)
     tape_number = StringField('Номер бандажной ленты', validators=[validators.Length(max=150)])
     serial_number = StringField('Серийный номер', validators=[validators.Optional(), validators.Length(max=150)])
     commissioned = DateField('Дата ввода в эксплуатацию')
@@ -135,7 +135,7 @@ def coerce_bool(x):
 class Report_form(Form):
     checkup_date = DateField('Дата контроля')
     next_checkup_date = DateField('Дата следующего контроля')
-    inspector = SelectField('Инспектор', validators=[validators.Optional()])
+    inspector = SelectField('Инспектор', coerce=int, validators=[validators.Optional()])
     ambient_temp = DecimalField('t окружающей среды, \u00B0C')
     total_light = DecimalField('Общая освещённость')
     surface_light = DecimalField('Освещённость объекта контроля')

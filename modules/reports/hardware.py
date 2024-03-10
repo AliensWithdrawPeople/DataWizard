@@ -107,8 +107,8 @@ def add_hardware(id=None):
             current_app.logger.exception('RuntimeError: hardware_obj #%s is none.', id, exc_info=True)
             return redirect(url_for(sidebar_urls['Reports.hardware']))
         
-        form.owner.data = hardware_obj.unit.company.name
-        form.setup.data = str(hardware_obj.unit.setup_name)
+        form.owner.data = hardware_obj.unit.company_id
+        form.setup.data = hardware_obj.unit_id
         # form.location.data = str(hardware_obj.unit.location)
         form.tape_number.data = hardware_obj.tape_number
         form.serial_number.data = hardware_obj.serial_number
