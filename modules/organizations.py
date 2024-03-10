@@ -98,7 +98,7 @@ def add_company(id=None):
             obj = session_db.scalars(select(Models.Company).where(Models.Company.id == str(id))).one()
             logo_img_id = attach_handler.load_img_from_form(form.logo_img, obj.logo_id)
             if logo_img_id is True:
-                data['logo_id'] = logo_img_id
+                data['logo_id'] = obj.logo_id
                 
             for key, val in data.items():
                 setattr(obj, key, val)

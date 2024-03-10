@@ -125,7 +125,7 @@ def edit_user(id):
         form.certificate_number.data = user_obj.certificate_number
         form.certificated_till.data = user_obj.certificated_till
         session_db.connection().close()
-        return render_template('edit_user.html', is_admin=True, username=user_obj.name, sidebar_urls=sidebar_urls, form=form)
+        return render_template('edit_user.html', is_admin=True, username=current_user.get_name(), sidebar_urls=sidebar_urls, form=form)
     
     if request.method == 'POST' and form.validate():
         certificate_img_id = attach_handler.load_img_from_form(form.certificate_img, user_obj.certificate_scan_id)

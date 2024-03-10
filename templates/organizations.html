@@ -149,7 +149,7 @@
         if(selected_org.length != 0) {
             if (confirm("Вы хотите удалить " + table_org.rows('.selected').data().length + ' элемент(ов). Вы уверены?')) {
                 delete_list_org = [...selected_org];
-                table_org.ajax.reload();
+                table_org.ajax.reload(reload_units);
                 selected_org.length = 0;
                 delete_list_org = [];
             } 
@@ -159,7 +159,7 @@
     function delete_element_org(id) {
         if (confirm('Вы хотите удалить элемент с id = ' + id + '. Вы уверены?')) {
             delete_list_org = [id];
-            table_org.ajax.reload();
+            table_org.ajax.reload(reload_units);
             delete_list_org = [];
         } 
     }
@@ -208,6 +208,9 @@
             },
         ]
     });
+    function reload_units() {
+        table_unit.ajax.reload();
+    }
 
     function get_delete_list_unit() {
         return delete_list_unit.join(',');
@@ -239,7 +242,7 @@
     function delete_element_unit(id) {
         if (confirm('Вы хотите удалить элемент с id = ' + id + '. Вы уверены?')) {
             delete_list_unit = [id];
-            table_org.ajax.reload();
+            table_unit.ajax.reload();
             delete_list_unit = [];
         } 
     }
