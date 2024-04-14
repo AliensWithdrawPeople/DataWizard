@@ -44,7 +44,7 @@
                 <td style="border-right: 2px solid;">Минимальная толщина, мм</td>
                 {% for t in ts %}
                     {% if not loop.last %}
-                        <td>{{ t if t is not none else '-' }}</td>
+                        <td>{{ t|round(2) if t is not none else '-' }}</td>
                     {% else %}
                         <td style="border-right: 2px solid;">{{ t if t is not none else '-' }}</td>
                     {% endif %}
@@ -58,7 +58,7 @@
                 <td style="border-right: 2px solid;"> Minimal thickness, in</td>
                 {% for t in ts %}
                     {% if not loop.last %}
-                        <td>{{ t * 0.039 if t is not none else '-' }}</td>
+                        <td>{{ t * 0.039|round(2) if t is not none else '-' }}</td>
                     {% else %}
                         <td style="border-right: 2px solid;">{{ t * 0.039|round(2) if t is not none else '-' }}</td>
                     {% endif %}

@@ -40,32 +40,33 @@ def current_reports():
 def reports_json():
     def owner_filter(selected, model, filter_val):
         if not filter_val is None and filter_val != 'Все':
-            selected = selected.join_from(model, Models.Company).where(Models.Company.name == filter_val)
+            selected = selected.join(Models.Hardware).join(Models.Unit, Models.Hardware.unit_id == Models.Unit.id).join(Models.Company, Models.Unit.company_id == Models.Company.id).where(Models.Company.name == filter_val)
+            pass
         return selected
     
     def setup_filter(selected, model, filter_val):
         if not filter_val is None and filter_val != 'Все':
-            selected = selected.join_from(model, Models.Unit).where(Models.Unit.setup_name == filter_val)
+            selected = selected.join(Models.Hardware).join(Models.Unit, Models.Hardware.unit_id == Models.Unit.id).where(Models.Unit.setup_name == filter_val)
         return selected
     
     def manufacturer_filter(selected, model, filter_val):
         if not filter_val is None and filter_val != 'Все':
-            selected = selected.join_from(model, Models.Catalogue).where(Models.Catalogue.manufacturer == filter_val)
+            selected = selected.join(Models.Hardware).join(Models.Catalogue, Models.Hardware.catalogue_id == Models.Catalogue.id).where(Models.Catalogue.manufacturer == filter_val)
         return selected
     
     def location_filter(selected, model, filter_val):
         if not filter_val is None and filter_val != 'Все':
-            selected = selected.join_from(model, Models.Unit).where(Models.Unit.location == filter_val)
+            selected = selected.join(Models.Hardware).join(Models.Unit, Models.Hardware.unit_id == Models.Unit.id).where(Models.Unit.location == filter_val)
         return selected
-    
+
     def checkup_date_filter(selected, model, filter_val):
         if not filter_val is None:
             try:
-                filter_val = datetime.datetime.strptime(filter_val, '%d.%m.%y').date()
+                filter_val = datetime.datetime.strptime(filter_val, '%Y-%m-%d').date()
             except ValueError as e:
                 current_app.logger.info('Bad filter_val in checkup_date_filter: %s', e, exc_info=True)
                 return selected   
-            selected = selected.join_from(model, Models.Unit).where(Models.Unit.location == filter_val)
+            selected = selected.where(model.checkup_date == filter_val)
         return selected
         
     filter_dict = {
@@ -154,7 +155,7 @@ def get_hardware_info(tape_number=None):
     hard_info['manufacturer'] = hardware_type.manufacturer
     hard_info['batch_number'] = hardware_type.batch_number
     hard_info['life_time'] = hardware_type.life_time
-    hard_info['commissioned'] = hardware.commissioned
+    hard_info['commissioned'] = hardware.commissioned.strftime('%Y-%m-%d')
     for i in range(1, 8):
         hard_info[f'min_T{i}'] =  hardware_type.__getattribute__(f'T{i}')
     for i in range(1, 5):
@@ -171,9 +172,9 @@ def add_report(id=None):
     req_form = request.form
     
     form = Report_form(req_form)
-    # form = Report_form()
     with get_session() as session:
         inspectors = list(session.execute(select(Models.User.id, Models.User.name).where(Models.User.role.in_(('admin', 'inspector')))).all())
+        prev_report = session.scalars(select(Models.Report).order_by(Models.Report.id.desc())).first()
     inspectors = [tuple(_) for _ in inspectors]
     form.inspector.choices = inspectors
     fill_from_form = req_form.get('fill_from_form', type=lambda req: req.lower() == 'true')
@@ -241,7 +242,6 @@ def add_report(id=None):
         add_or_edit = 'Редактировать'
         return render_template('add_report.html', is_admin=is_admin, username=username, sidebar_urls=sidebar_urls, add_or_edit=add_or_edit, form=form, trigger_change=True)
     
-    print("form.validate() =", form.validate(), 'request.method =', request.method)     
     if request.method == 'POST' and form.validate():
         is_report = form.VIC, form.UZT, form.UK, form.MK, form.Hydro, form.Hydro_preventer, form.calibration, form.multiple_tests
         report_types_raw = [rep_field.name for rep_field in is_report if rep_field.data]
@@ -344,4 +344,14 @@ def add_report(id=None):
             session_db.commit()
         return redirect(url_for(sidebar_urls['Reports.reports']))
     
+    if prev_report is not None:
+        current_app.logger.info('Filled form with common info from previous report (id = %s)', prev_report.id, exc_info=True)
+        if not prev_report.checkup_date is None:
+            form.checkup_date.data = datetime.datetime.strptime(str(prev_report.checkup_date), "%Y-%m-%d").date()
+        if not prev_report.next_checkup_date is None:
+            form.next_checkup_date.data = datetime.datetime.strptime(str(prev_report.next_checkup_date), "%Y-%m-%d").date()
+        form.inspector.data = prev_report.inspector_id
+        form.ambient_temp.data = prev_report.ambient_temp
+        form.total_light.data = prev_report.total_light
+        form.surface_light.data = prev_report.surface_light
     return render_template('add_report.html', is_admin=is_admin, username=username, sidebar_urls=sidebar_urls, add_or_edit=add_or_edit, form=form)

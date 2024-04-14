@@ -103,7 +103,8 @@ class AttachmentHandler:
         
         if not os.path.isfile(path):
             raise FileNotFoundError(f'img_id = {img_id} points to a file that does not exist. This id will be deleted from the Database.')
-        return send_file(path)
+        current_app.logger.info('Sending file from %s which is relative path to %s', os.path.relpath(path), path, exc_info=True)
+        return send_file(path, mimetype=f'image/{path.suffix[1:]}')
     
     @classmethod        
     def update(cls, img_id: int, file: Attachment) -> bool:

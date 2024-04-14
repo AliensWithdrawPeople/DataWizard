@@ -1,8 +1,11 @@
 from enum import Enum
+import math
+import shutil
 from typing import Any
 from zipfile import ZipFile
 import dataclasses
 
+from PyPDF4 import PdfFileMerger
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
 from sqlalchemy import select, and_
@@ -16,7 +19,6 @@ import uuid
 import sys
 import datetime
 from multiprocessing.pool import ThreadPool
-import numpy as np
 
 if 'GTK' in os.environ.keys():
     gtk_path = pathlib.PurePath(os.environ['GTK'])
@@ -51,7 +53,7 @@ def get_type_specific_params(report: Report, rep_type: report_type)->dict[str, A
             
         case report_type.UTM.name:
             res = { "tools" : tools + ["Номинальная частота контроля: 5 МГц; СОП №7448."],
-                    "ts" : list(np.round([report.T1, report.T2, report.T3, report.T4, report.T5, report.T6, report.T7], 2)),
+                    "ts" : [report.T1, report.T2, report.T3, report.T4, report.T5, report.T6, report.T7],
                     "minimal_ts" : [report.hardware.type.T1, report.hardware.type.T2, report.hardware.type.T3, report.hardware.type.T4, report.hardware.type.T5, report.hardware.type.T6, report.hardware.type.T7],
                     "sketch" : Reporter.get_image(session_db.scalars(select(Img.src).where(Img.id == report.hardware.type.sketch_UZT_id)).one_or_none())
                 }
@@ -75,13 +77,14 @@ def get_type_specific_params(report: Report, rep_type: report_type)->dict[str, A
     session_db.connection().close()
     return res
 
+reports_weights = {'Passport' : 0, 'VCM' : 1, 'UTM' : 2, 'MPI' : 3, 'HT' : 4}
 # Custom types
 class templates(Enum):
     VCM = 'VCM.html'
     UTM = 'UTM.html'
     MPI = 'MPI.html'
     HT = 'HT.html'
-    
+
 class img(Enum):
     LOGO = 'Weatherford_logo.png'
     STAMP = 'Weatherford_stamp.png'
@@ -134,6 +137,15 @@ class Reporter:
         if not os.path.isdir(path):
             current_app.logger.info('Oops! I am gonna mkdir %s cause it does not exist.', path, exc_info=True)
             os.mkdir(path)
+    
+    @staticmethod 
+    def __delete(path: os.PathLike):
+        path = pathlib.Path(path)
+        if path.is_file():
+            path.unlink(missing_ok=True)
+        
+        if path.is_dir():
+            shutil.rmtree(path, ignore_errors=True)
             
     root = os.path.dirname(os.path.abspath(__file__))
     storage_dir = config.reports_folder
@@ -169,7 +181,7 @@ class Reporter:
         Returns
         -------
         pathlib.PurePath | None
-            path to a zip with report.
+            path to the report.
         """
         session_db = get_session()
         try:
@@ -177,8 +189,8 @@ class Reporter:
             try:
                 current_app.logger.info('Creating report #%s for user #%s.', report_id, current_user.get_id(), exc_info=True) # type: ignore
                 config = generate_config(report, with_facsimile=with_facsimile, with_stamp=with_stamp)
-                _, res = cls.__create_report(current_user.get_id(), config, True) # type: ignore
-                return res
+                resulting_pdf = cls.__create_report(current_user.get_id(), report_id, config)
+                return resulting_pdf
             except FileNotFoundError as e:
                 current_app.logger.critical('ALARM!!! %s', e, exc_info=True)
                 return None
@@ -217,6 +229,7 @@ class Reporter:
             for rep_path in reports_path:
                 if rep_path is not None:
                     report_zip.write(rep_path, arcname=rep_path.name) 
+                    cls.__delete(rep_path)
         current_app.logger.info('Successfully packed reports zip to one zip file.')
         return output_zip
            
@@ -235,8 +248,8 @@ class Reporter:
         return weatherford_logo
     
     @classmethod 
-    def __create_report(cls, id: int | str, config: list[Report_Config], zip_files: bool) \
-        -> tuple[list[tuple[templates, pathlib.PurePath]], pathlib.PurePath | None]:
+    def __create_report(cls, id: int | str, report_id: int | str, config: list[Report_Config]) \
+        -> pathlib.PurePath:
         """
         id : int | str
             user id.
@@ -272,28 +285,35 @@ class Reporter:
         
         logo = cls.get_image(img.LOGO)
         stamp = cls.get_image(img.STAMP) if config[0].parameters.get('with_stamp') is True else None
-        outputs: list[tuple[templates, pathlib.PurePath]] = []
+        outputs: list[tuple[str, pathlib.PurePath]] = []
         
-        def task(config_tuple):
+        def task(config_tuple) -> tuple[str, pathlib.PurePath]:
             template_name, filename, params = config_tuple
             template = env.get_template(template_name.value)
             html_file_path = pathlib.PurePath(cls.storage_dir, 'html', folder_name, f'report_{template_name.value}')
             with open(html_file_path, 'w') as html_file:
                 html_file.write(template.render(weatherford_logo=logo, stamp=stamp, **params))
         
-            output_file_path = pathlib.PurePath(cls.storage_dir, 'pdf', folder_name, filename)
+            output_file_path = pathlib.PurePath(pdf_folder, filename)
             HTML(str(html_file_path)).write_pdf(str(output_file_path))
-            return (template_name, output_file_path)
+            return (template_name.value[:-5], output_file_path)
         
         with ThreadPool() as pool:
             for output in pool.imap(task, list(map(lambda x: dataclasses.astuple(x), config))):
                 outputs.append(output)
-            
-        output_zip = None
-        if zip_files:
-            output_zip = pathlib.PurePath(cls.storage_dir, 'pdf', folder_name, f'{request_id}.zip')
-            with ZipFile(output_zip, 'w') as report_zip:
-                for _, output in outputs:
-                    report_zip.write(output, arcname=output.name)
-        return outputs, output_zip
+        
+        report_paths = sorted(outputs, key=lambda item: reports_weights.get(item[0], math.inf), reverse=True)
+        merger = PdfFileMerger(strict=False)
+        for _, path in report_paths:
+            merger.append(fileobj=open(path, 'rb'))
+        output_filepath = pathlib.PurePath(cls.storage_dir, 'pdf', f'report_id_{report_id}_{datetime.datetime.now().date().strftime("%Y-%m-%d")}.pdf')
+
+        merger.write(fileobj=open(output_filepath, 'wb'))
+        print("Output successfully written to", output)
+        merger.close()
+        for _, path in report_paths:
+            cls.__delete(path)
+        cls.__delete(html_folder)
+        cls.__delete(pdf_folder)
+        return output_filepath
     

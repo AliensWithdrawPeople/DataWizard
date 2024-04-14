@@ -9,4 +9,4 @@ weasyprint >= 59.0
 python-dotenv >= 1.0.
 waitress >= 2.1.2
 passlib >= 1.7.4
-numpy >= 1.24.2
+PyPDF4 >= 1.27.0

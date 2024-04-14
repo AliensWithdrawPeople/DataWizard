@@ -1,7 +1,6 @@
 from flask import Blueprint, redirect, render_template, request, send_from_directory, url_for, current_app
 from flask_login import login_required, current_user
 from modules.Attachment.AttachmentHandler import AttachmentHandler
-from numpy import flip
 from sqlalchemy import or_, select 
 from sqlalchemy.exc import MultipleResultsFound, NoResultFound
 
@@ -135,6 +134,7 @@ def send_logo(id):
     default_res = send_from_directory("C:/work/DataWizard/static/img/", "tiny_logo.png") 
     if not logo_id is None:
         try:
+            current_app.logger.info('Passing logo_id = %s to attach_handler', logo_id, exc_info=True)
             return attach_handler.download(int(logo_id))
         except ValueError as e:
             current_app.logger.warning('Yo! Im gonna return default logo cause %s', e, exc_info=True)
@@ -142,6 +142,7 @@ def send_logo(id):
         except FileNotFoundError as e:
             current_app.logger.warning('Yo! Im gonna return default logo cause %s', e, exc_info=True)
             return default_res   
+    current_app.logger.warning('Yo! Im gonna return default logo cause logo_id = %s is None', logo_id, exc_info=True)
     return default_res 
 
 @organizations.route("/clients/unit/add", methods=('GET', 'POST'))

@@ -11,21 +11,16 @@ dictConfig({
     }},
     'handlers': {
         'wsgi': {
-            'class': 'logging.StreamHandler',
-            'stream': 'ext://flask.logging.wsgi_errors_stream',
-            'formatter': 'default'
-        },
-        'custom_handler': {
-            'class' : 'logging.handlers.RotatingFileHandler',
+            'class': 'logging.handlers.RotatingFileHandler',
             'formatter': 'default',
-            'filename' : 'DataWizard.log',
-            'backupCount': 30
-            # 'level'    : 'WARN'
+            'filename': 'logs/DataWizard.log',
+            'maxBytes': 1024 * 1024,
+            'backupCount': 15,
         }
     },
     'root': {
         'level': 'INFO',
-        'handlers': ['wsgi', 'custom_handler']
+        'handlers': ['wsgi']
     }
 })
             

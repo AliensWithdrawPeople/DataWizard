@@ -378,8 +378,11 @@
         const residuals = ts.map(function(el) {
             t = document.getElementById(el);
             min_t = document.getElementById("min_" + el);
-            if(t && min_t) {
-                return t.value - min_t.value;
+            let t_val = parseFloat(t.value);
+            let min_t_val = parseFloat(min_t.value);
+            if(!isNaN(min_t_val) && !isNaN(t_val)) {
+                a = t_val - min_t_val
+                return a >= 0?  a : 0;
             }
             else {
                 return NaN;
@@ -394,7 +397,7 @@
         else {
             residual_field.value = '';
         }
-    }, 500);
+    }, 100);
         
     ts.forEach(item => { document.getElementById(item).addEventListener('change', calc_residual); });
     
