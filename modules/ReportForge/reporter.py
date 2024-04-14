@@ -302,7 +302,7 @@ class Reporter:
             for output in pool.imap(task, list(map(lambda x: dataclasses.astuple(x), config))):
                 outputs.append(output)
         
-        report_paths = sorted(outputs, key=lambda item: reports_weights.get(item[0], math.inf), reverse=True)
+        report_paths = sorted(outputs, key=lambda item: reports_weights.get(item[0], math.inf))
         merger = PdfFileMerger(strict=False)
         for _, path in report_paths:
             merger.append(fileobj=open(path, 'rb'))
