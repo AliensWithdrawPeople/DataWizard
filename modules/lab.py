@@ -124,6 +124,9 @@ def edit_user(id):
         form.position.data = user_obj.position
         form.certificate_number.data = user_obj.certificate_number
         form.certificated_till.data = user_obj.certificated_till
+        
+        form.certificate_img.process_data(f"/api/data/img/{user_obj.certificate_scan_id}")
+        form.facsimile_img.process_data(f"/api/data/img/{user_obj.facsimile_id}")
         session_db.connection().close()
         return render_template('edit_user.html', is_admin=True, username=current_user.get_name(), sidebar_urls=sidebar_urls, form=form)
     
@@ -209,6 +212,9 @@ def add_tool(id=None):
         form.factory_number.data = tool_obj.factory_number
         form.inventory_number.data = tool_obj.inventory_number
         form.checkup_certificate_number.data = tool_obj.checkup_certificate_number
+        form.checkup_certificate_img.process_data(f"/api/data/img/{tool_obj.checkup_certificate_scan_id}")
+        form.passport_img.process_data(f"/api/data/img/{tool_obj.passport_scan_id}")
+        
         
         if not tool_obj.prev_checkup is None:
             form.prev_checkup.data = datetime.datetime.strptime(str(tool_obj.prev_checkup), "%Y-%m-%d").date()

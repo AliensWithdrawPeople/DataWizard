@@ -94,6 +94,13 @@ def add_cat(id=None):
         
         form.max_pressure.data = obj.max_pressure
         
+        form.manufacturer_logo_img.process_data(f"/api/data/img/{obj.manufacturer_logo_id}")
+        form.sketch_VIC_img.process_data(f"/api/data/img/{obj.sketch_VIC_id}")
+        form.sketch_UZT_img.process_data(f"/api/data/img/{obj.sketch_UZT_id}")
+        form.sketch_UK_img.process_data(f"/api/data/img/{obj.sketch_UK_id}")
+        form.sketch_MK_img.process_data(f"/api/data/img/{obj.sketch_MK_id}")
+        form.sketch_diagram_img.process_data(f"/api/data/img/{obj.sketch_diagram_id}")
+        
         add_or_edit = 'Редактировать'
         return render_template('add_cat.html', is_admin=is_admin, username=username, sidebar_urls=sidebar_urls, add_or_edit=add_or_edit, form=form)
         

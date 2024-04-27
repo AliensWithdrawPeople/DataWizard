@@ -1,4 +1,75 @@
 {% macro render_field(field) %}
+{% if field.name[-4:] == '_img' %}
+<div id= {{field.name}}_hid_FileField>
+    
+    <dt>{{ field.label }}
+    <dd>{{ field(**kwargs)|safe }}
+    <button class="btn btn-primary" type="button"  data-bs-toggle="modal" data-bs-target="#{{field.name}}_modal"  id="{{field.name}}__img_button"> 
+        <i class="bi bi-file-image"></i>
+    </button>
+
+    {% if field.errors %}
+        <ul class=errors>
+        {% for error in field.errors %}
+        <li>{{ error }}</li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+    </dd>    
+</div>
+
+<!-- Image in Modal -->
+<div class="modal fade" id="{{field.name}}_modal" tabindex="-1" role="dialog" aria-labelledby="{{field.name}}_ModalCenterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+      <div class="modal-content" display=inline-block>
+        
+        <div class="modal-header">
+          <h5 class="modal-title" id="{{field.name}}_modal_Title">{{ field.label }}</h5>
+          <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        
+        <div class="modal-body">
+            <img src="{{field.data}}" class="img-fluid object-fit-md-contain border rounded" alt="{{field.name}} was not loaded." id = '{{field.name}}_modal_image'>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+images = document.querySelectorAll('[id$=_img]');
+Array.prototype.forEach.call(images, img_id_callback);
+
+function readURL(input, img_id) {
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        
+        reader.onload = function(e) {
+            document.getElementById(img_id).src = e.target.result;
+        };
+        reader.readAsDataURL(input.files[0]);
+        console.log(input.files[0]);
+    }
+}
+
+function img_id_callback(element, iterator) {
+    element.onchange = function() {
+        img_id = element.id + '_modal_image';
+        // document.getElementById(element.id + '_modal_image').src = this.value.substring(12);
+        console.log(iterator, element.id, this.value.substring(12));
+        readURL(element, img_id);
+    };
+}
+</script>
+{% endblock %}
+
+{% else %}
 <div id= {{field.name}}_hid>
     <dt>{{ field.label }}
     <dd>{{ field(**kwargs)|safe }}
@@ -11,4 +82,6 @@
     {% endif %}
     </dd>
 </div>
+{% endif %}
+
 {% endmacro %}

@@ -9,12 +9,14 @@ from modules.auth import auth, login_manager
 from modules.lab import lab
 from modules.organizations import organizations
 from modules.reports.base_report import base_report
+from modules.api import api
 from modules.aux_scripts.Templates_params import sidebar_urls
 
 app.register_blueprint(auth)
 app.register_blueprint(lab)
 app.register_blueprint(organizations)
 app.register_blueprint(base_report)
+app.register_blueprint(api)
 
 app.secret_key = config.secret_key
 login_manager.init_app(app)

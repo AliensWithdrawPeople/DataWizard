@@ -81,7 +81,10 @@ def add_company(id=None):
         if(obj is None):
             session_db.connection().close()
             raise RuntimeError('edit_company: obj is none')
+        
         form.name.data = obj.name
+        form.logo_img.process_data(f"/api/data/img/{obj.logo_id}")
+
         add_or_edit = 'Редактировать'
         session_db.connection().close()
         return render_template('add_company.html', is_admin=is_admin, username=username, sidebar_urls=sidebar_urls, add_or_edit=add_or_edit, form=form)

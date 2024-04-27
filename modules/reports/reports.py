@@ -238,7 +238,13 @@ def add_report(id=None):
         form.multiple_tests.data = (report_obj.double_test or report_obj.one_and_a_fifth_test or report_obj.one_and_a_half_test)
         if report_obj.double_test is not None:
             fill_fields(form.multiple_tests_fields_names, report_obj) # type: ignore
-                 
+         
+        form.sketch_GI_body_img.process_data(f"/api/data/img/{report_obj.GI_body_sketch_id}")
+        form.sketch_GI_pipes_img.process_data(f"/api/data/img/{report_obj.GI_pipes_sketch_id}")
+        form.sketch_GI_vac_img.process_data(f"/api/data/img/{report_obj.GI_gluhie_sketch_id}")
+        form.sketch_calibration_img.process_data(f"/api/data/img/{report_obj.calibration_diagram_sketch_id}")
+        form.sketch_multiple_tests_img.process_data(f"/api/data/img/{report_obj.multiple_tests_diagram_sketch_id}")
+         
         add_or_edit = 'Редактировать'
         return render_template('add_report.html', is_admin=is_admin, username=username, sidebar_urls=sidebar_urls, add_or_edit=add_or_edit, form=form, trigger_change=True)
     
