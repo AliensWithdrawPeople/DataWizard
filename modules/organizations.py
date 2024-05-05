@@ -134,7 +134,7 @@ def send_logo(id):
     finally:
         session_db.connection().close()
     current_app.logger.info(f'Found logo with logo_id = {id}')
-    default_res = send_from_directory("C:/work/DataWizard/static/img/", "tiny_logo.png") 
+    default_res = send_from_directory("static/img/", "tiny_logo.png") 
     if not logo_id is None:
         try:
             current_app.logger.info('Passing logo_id = %s to attach_handler', logo_id, exc_info=True)

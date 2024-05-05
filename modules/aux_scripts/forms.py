@@ -142,8 +142,8 @@ class Report_form(Form):
     tape_number = StringField('Номер бандажной ленты')
 
     owner = StringField('Компания владелец', render_kw={'readonly': True, 'disabled':'disabled'})
-    setup = StringField('Установка', render_kw={'readonly': True, 'disabled':'disabled'})
-    location = StringField('Место дислокации', render_kw={'readonly': True, 'disabled':'disabled'})
+    setup = SelectField('Установка', coerce=int, choices=[], validate_choice=False)
+    location = SelectField('Место дислокации', coerce=int, choices=[], validate_choice=False)
     serial_number = StringField('Серийный номер', render_kw={'readonly': True, 'disabled':'disabled'})
     name = StringField('Наименование', render_kw={'readonly': True, 'disabled':'disabled'})
     comment = StringField('Характеристики', render_kw={'readonly': True, 'disabled':'disabled'})

@@ -27,7 +27,7 @@ if 'GTK' in os.environ.keys():
 from weasyprint import HTML
 
 from ..db_connecter import get_session
-from ..Models import Report, report_type, Img, Tool
+from ..Models import Hardware, Report, report_type, Img, Tool
 import config
 
 # Helper functions
@@ -306,7 +306,15 @@ class Reporter:
         merger = PdfFileMerger(strict=False)
         for _, path in report_paths:
             merger.append(fileobj=open(path, 'rb'))
-        output_filepath = pathlib.PurePath(cls.storage_dir, 'pdf', f'report_id_{report_id}_{datetime.datetime.now().date().strftime("%Y-%m-%d")}.pdf')
+        with get_session() as session_db:
+            try:
+                tape_number = session_db.execute(select(Hardware.tape_number, Report.checkup_date).join(Hardware).where(Report.id == int(report_id))).one().tuple()
+                output_filepath = pathlib.PurePath(cls.storage_dir, 'pdf', f'tape_number_{tape_number[0]}_{tape_number[1].strftime("%Y-%m-%d")}.pdf')
+            except Exception as e:
+                current_app.logger.exception(f'Oops! Something is off with report_id = {report_id}', exc_info=True)
+                output_filepath = pathlib.PurePath(cls.storage_dir, 'pdf', f'report_id_{report_id}_{datetime.datetime.now().date().strftime("%Y-%m-%d")}.pdf')
+
+        # output_filepath = pathlib.PurePath(cls.storage_dir, 'pdf', f'report_id_{report_id}_{datetime.datetime.now().date().strftime("%Y-%m-%d")}.pdf')
 
         merger.write(fileobj=open(output_filepath, 'wb'))
         print("Output successfully written to", output)

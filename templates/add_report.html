@@ -363,11 +363,26 @@
             .then((res) => {
                 const data = res.data;
                 Object.entries(res).forEach(([key, value]) => {
-                    const element = document.getElementById(key);
-                    if(element) {
-                        element.value = value;
-                    } else {
-                        console.error(`Element with id ${key} and val ${value} not found.`);
+                    if(key.startsWith("_list_", 0))
+                    { 
+                        const list_key = key.replace("_list_", "");
+                        const list_element = document.getElementById(list_key);
+                        value.forEach(([unit_id, unit_name, is_default_option]) => {
+                                option = document.createElement("option");
+                                option.text = unit_name;
+                                option.value = unit_id;
+                                option.selected = is_default_option;
+                                list_element.add(option);
+                            }
+                        );
+                    }
+                    else {
+                        const element = document.getElementById(key);
+                        if(element) {
+                            element.value = value;
+                        } else {
+                            console.error(`Element with id ${key} and val ${value} not found.`);
+                        }
                     }
                 });
             });

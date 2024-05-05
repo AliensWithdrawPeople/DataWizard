@@ -134,6 +134,8 @@ def get_hardware_info(tape_number=None):
             
             unit = session.execute(select(Models.Unit).where(Models.Unit.id == hardware.unit_id)).one()
             unit = unit.tuple()[-1]
+            company_units = session.execute(select(Models.Unit).where(Models.Unit.company_id == unit.company_id)).all()
+            company_units = [x.tuple()[-1] for x in company_units]
             
             hardware_type = session.execute(select(Models.Catalogue).where(Models.Catalogue.id == hardware.catalogue_id)).one()
             hardware_type = hardware_type.tuple()[-1]
@@ -142,13 +144,14 @@ def get_hardware_info(tape_number=None):
         except (MultipleResultsFound, NoResultFound) as e:
             current_app.logger.info('Cant find info on tape_number = #%s.', tape_number, exc_info=True)
             return {}
-    keys = ['owner', 'setup', 'location', 'serial_number', 'name', 'comment', 'manufacturer', 'batch_number', 'life_time', 'commissioned']
+    keys = ['owner', '_list_setup', '_list_location', 'serial_number', 'name', 'comment', 'manufacturer', 'batch_number', 'life_time', 'commissioned']
     keys += [f'min_T{i}' for i in range(1, 8)] + [f'stage{i}' for i in range(1, 5)] + [f'duration{i}' for i in range(1, 5)]
     hard_info = dict.fromkeys(keys, None)
     
     hard_info['owner'] = owner.name
-    hard_info['setup'] = unit.setup_name
-    hard_info['location'] = unit.location
+    hard_info['_list_setup'] = [[x.id, x.setup_name, unit.id == x.id] for x in company_units]
+    hard_info['_list_location'] = [[x.id, x.location, unit.id == x.id] for x in company_units]
+    
     hard_info['serial_number'] = hardware.serial_number
     hard_info['name'] = hardware_type.name
     hard_info['comment'] = hardware_type.comment
@@ -248,7 +251,7 @@ def add_report(id=None):
         add_or_edit = 'Редактировать'
         return render_template('add_report.html', is_admin=is_admin, username=username, sidebar_urls=sidebar_urls, add_or_edit=add_or_edit, form=form, trigger_change=True)
     
-    if request.method == 'POST' and form.validate():
+    if request.method == 'POST' and form.validate():          
         is_report = form.VIC, form.UZT, form.UK, form.MK, form.Hydro, form.Hydro_preventer, form.calibration, form.multiple_tests
         report_types_raw = [rep_field.name for rep_field in is_report if rep_field.data]
         report_types = []
@@ -336,8 +339,19 @@ def add_report(id=None):
         for key, val in data.items():
                 if type(val) is str:
                     val = val.strip()
+        hardware_new_unit_id = form.setup.data
         
         with get_session() as session_db:
+            try:
+                unit_ids = session_db.scalars(select(Models.Unit.id).where(Models.Unit.id == hardware_new_unit_id)).one()
+                if(unit_ids is not None):
+                    hardware = session_db.scalars(select(Models.Hardware).where(Models.Hardware.id == hardware_id)).one()
+                    hardware.unit_id = hardware_new_unit_id
+                    current_app.logger.info('Hardware #%s was successfully edited: now hardware.unit_id = %s.', hardware.id, hardware.unit_id, exc_info=True)
+            except (MultipleResultsFound, NoResultFound) as e:
+                current_app.logger.exception("New hardware's unit id = %s is broken. Nothing was updated: %s", hardware_new_unit_id, e, exc_info=True)
+
+                
             if not id is None:
                 report = session_db.scalars(select(Models.Report).where(Models.Report.id == str(id))).one()           
                 for key, val in data.items():
